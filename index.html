@@ -497,9 +497,10 @@ function genReport() {
 }
 
 function exportExcel() {
-    let csv = '\uFEFFName,Phone,Medication,Dispense Date,Days,Notes,Reminder Sent,Reminder Date,Converted,Converted Date\n';
-    patients.forEach(p => { csv += `"${p.name}","${p.phone}","${p.med}","${p.date}","${p.days}","${p.notes}","${p.reminderSent}","${p.reminderDate}","${p.converted}","${p.convertedDate}"\n`; });
-    download(csv, 'patients.csv', 'text/csv');
+    let data = 'Name\tPhone\tMedication\tDispense Date\tDays\tNotes\tReminder Sent\tReminder Date\tConverted\tConverted Date\n';
+    patients.forEach(p => { data += `${p.name}\t${p.phone}\t${p.med}\t${p.date}\t${p.days}\t${p.notes}\t${p.reminderSent}\t${p.reminderDate}\t${p.converted}\t${p.convertedDate}\n`; });
+    const blob = new Blob(['\uFEFF' + data], {type: 'application/vnd.ms-excel;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'patients.xls'; a.click();
 }
 
 function exportReport() {
@@ -517,22 +518,21 @@ function exportReport() {
     const waiting = sent - conv;
     const rate = sent > 0 ? Math.round(conv/sent*100) : 0;
     
-    let csv = '\uFEFF';
-    csv += 'Alrazi Pharmacy - Monthly Report\n';
-    csv += `Month,${m} ${y}\n\n`;
-    csv += 'Metric,Count,Percentage\n';
-    csv += `Reminders Sent,${sent},100%\n`;
-    csv += `Converted,${conv},${rate}%\n`;
-    csv += `Waiting,${waiting},${sent > 0 ? Math.round(waiting/sent*100) : 0}%\n`;
-    csv += '\n';
-    csv += 'Converted Patients\n';
-    csv += 'Name,Phone,Medication,Reminder Date,Converted Date\n';
+    let data = 'Alrazi Pharmacy - Monthly Report\n';
+    data += `Month:\t${m} ${y}\n\n`;
+    data += 'Metric\tCount\tPercentage\n';
+    data += `Reminders Sent\t${sent}\t100%\n`;
+    data += `Converted\t${conv}\t${rate}%\n`;
+    data += `Waiting\t${waiting}\t${sent > 0 ? Math.round(waiting/sent*100) : 0}%\n`;
+    data += '\n\nConverted Patients\n';
+    data += 'Name\tPhone\tMedication\tReminder Date\tConverted Date\n';
     
     mp.filter(p => p.converted === 'yes').forEach(p => {
-        csv += `"${p.name}","${p.phone}","${p.med}","${p.reminderDate}","${p.convertedDate}"\n`;
+        data += `${p.name}\t${p.phone}\t${p.med}\t${p.reminderDate}\t${p.convertedDate}\n`;
     });
     
-    download(csv, `Alrazi_Report_${m}_${y}.csv`, 'text/csv');
+    const blob = new Blob(['\uFEFF' + data], {type: 'application/vnd.ms-excel;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Alrazi_Report_${m}_${y}.xls`; a.click();
 }
 
 function download(c, n, t) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], {type: t+';charset=utf-8'})); a.download = n; a.click(); }
