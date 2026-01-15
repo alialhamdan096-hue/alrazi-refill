@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alrazi Pharmacy</title>
+    <title>Alrazi Refill Cash Patients System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: white; color: #333; min-height: 100vh; padding: 20px; }
@@ -49,7 +49,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Alrazi Pharmacy</h1>
+        <h1>Alrazi Refill Cash Patients System</h1>
 
     <div class="stats">
         <div class="stat"><div class="stat-num" id="total">0</div><div class="stat-label">Total Patients</div></div>
@@ -191,7 +191,7 @@ function render() {
     document.getElementById('over').textContent = o;
 
     if ('Notification' in window && Notification.permission === 'granted' && (w > 0 || o > 0)) {
-        new Notification('Alrazi Pharmacy Reminder', {
+        new Notification('Alrazi Refill Cash Patients System Reminder', {
             body: `You have ${w} patients needing reminder and ${o} overdue.`,
             tag: 'pharmacy-reminder'
         });
