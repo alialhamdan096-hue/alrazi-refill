@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alrazi Pharmacy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0a0f1c; color: #f1f5f9; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #14b8a6; margin-bottom: 30px; text-align: center; }
+        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        .card { background: #1a2234; border-radius: 15px; padding: 25px; border: 1px solid #2d3748; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 14px; }
+        input { width: 100%; padding: 12px; background: #111827; border: 1px solid #2d3748; border-radius: 8px; color: #f1f5f9; font-size: 14px; }
+        input:focus { outline: none; border-color: #14b8a6; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-primary { background: #14b8a6; color: white; }
+        .btn-secondary { background: #2d3748; color: white; }
+        .btn:hover { opacity: 0.9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; padding: 12px; background: #111827; color: #64748b; font-size: 12px; text-transform: uppercase; }
+        td { padding: 15px 12px; border-bottom: 1px solid #2d3748; }
+        .name { font-weight: bold; }
+        .phone { color: #64748b; font-size: 13px; }
+        .med { color: #14b8a6; }
+        .status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .ok { background: rgba(16,185,129,0.2); color: #10b981; }
+        .warn { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .danger { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .actions { display: flex; gap: 8px; }
+        .actions button { width: 35px; height: 35px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .wa { background: rgba(37,211,102,0.2); color: #25D366; }
+        .edit { background: rgba(20,184,166,0.2); color: #14b8a6; }
+        .del { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .actions button:hover { opacity: 0.8; }
+        .empty { text-align: center; padding: 50px; color: #64748b; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat { background: #1a2234; padding: 20px; border-radius: 12px; border: 1px solid #2d3748; }
+        .stat-num { font-size: 32px; font-weight: bold; }
+        .stat-label { color: #64748b; font-size: 14px; }
+        .stat.w { border-left: 4px solid #f59e0b; }
+        .stat.d { border-left: 4px solid #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Alrazi Pharmacy</h1>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-num" id="total">0</div><div class="stat-label">Total Patients</div></div>
+        <div class="stat w"><div class="stat-num" id="warn">0</div><div class="stat-label">Need Reminder</div></div>
+        <div class="stat d"><div class="stat-num" id="over">0</div><div class="stat-label">Overdue</div></div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3 style="margin-bottom:20px" id="formTitle">Add Patient</h3>
+            <form id="form">
+                <input type="hidden" id="pid">
+                <div class="form-group"><label>Patient Name</label><input type="text" id="name" required></div>
+                <div class="form-group"><label>Phone (e.g. 966512345678)</label><input type="tel" id="phone" required></div>
+                <div class="form-group"><label>Medication</label><input type="text" id="med" required></div>
+                <div class="row">
+                    <div class="form-group"><label>Dispense Date</label><input type="date" id="date" required></div>
+                    <div class="form-group"><label>Duration (days)</label><input type="number" id="days" value="30" required></div>
+                </div>
+                <div class="form-group"><label>Notes</label><input type="text" id="notes"></div>
+                <button type="submit" class="btn btn-primary" id="submitBtn">Add Patient</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">Cancel</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Patient Records</h3>
+            <input type="text" id="search" placeholder="Search..." style="margin-top:15px" oninput="render()">
+            <table><thead><tr><th>Patient</th><th>Medication</th><th>Refill Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<script>
+let patients = JSON.parse(localStorage.getItem('patients')) || [];
+let editId = null;
+
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+document.getElementById('date').valueAsDate = new Date();
+
+document.getElementById('form').onsubmit = function(e) {
+    e.preventDefault();
+    const p = {
+        id: editId || Date.now().toString(),
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value.replace(/\D/g, ''),
+        med: document.getElementById('med').value,
+        date: document.getElementById('date').value,
+        days: document.getElementById('days').value,
+        notes: document.getElementById('notes').value
+    };
+    if (editId) {
+        const i = patients.findIndex(x => x.id === editId);
+        patients[i] = p;
+    } else {
+        patients.push(p);
+    }
+    save();
+    resetForm();
+};
+
+function save() {
+    localStorage.setItem('patients', JSON.stringify(patients));
+    render();
+}
+
+function resetForm() {
+    editId = null;
+    document.getElementById('form').reset();
+    document.getElementById('days').value = '30';
+    document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('formTitle').textContent = 'Add Patient';
+    document.getElementById('submitBtn').textContent = 'Add Patient';
+}
+
+function editP(id) {
+    const p = patients.find(x => x.id === id);
+    editId = id;
+    document.getElementById('name').value = p.name;
+    document.getElementById('phone').value = p.phone;
+    document.getElementById('med').value = p.med;
+    document.getElementById('date').value = p.date;
+    document.getElementById('days').value = p.days;
+    document.getElementById('notes').value = p.notes || '';
+    document.getElementById('formTitle').textContent = 'Edit Patient';
+    document.getElementById('submitBtn').textContent = 'Update';
+}
+
+function delP(id) {
+    if (confirm('Delete this patient?')) {
+        patients = patients.filter(x => x.id !== id);
+        save();
+    }
+}
+
+function sendWA(id) {
+    const p = patients.find(x => x.id === id);
+    const msg = `السلام عليكم ورحمة الله وبركاته
+صيدلية الرازي ترحب بكم
+
+هذا تذكير بموعد صرف الدواء الخاص بك:
+
+الدواء: ${p.med}
+
+نسعد بتجهيزه لكم عبر:
+
+- الاستلام من الصيدلية
+
+- التوصيل لموقعكم
+
+نتمنى لكم دوام الصحة والعافية`;
+    window.open('https://wa.me/' + p.phone + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function getRefill(p) {
+    const d = new Date(p.date);
+    d.setDate(d.getDate() + parseInt(p.days));
+    return d;
+}
+
+function getDays(p) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const refill = getRefill(p); refill.setHours(0,0,0,0);
+    return Math.ceil((refill - today) / (1000*60*60*24));
+}
+
+function render() {
+    const search = document.getElementById('search').value.toLowerCase();
+    let list = patients.filter(p => p.name.toLowerCase().includes(search) || p.med.toLowerCase().includes(search) || p.phone.includes(search));
+    list.sort((a,b) => getRefill(a) - getRefill(b));
+    
+    let t=0, w=0, o=0;
+    patients.forEach(p => { const d = getDays(p); if(d<0) o++; else if(d<=2) w++; });
+    document.getElementById('total').textContent = patients.length;
+    document.getElementById('warn').textContent = w;
+    document.getElementById('over').textContent = o;
+
+    if ('Notification' in window && Notification.permission === 'granted' && (w > 0 || o > 0)) {
+        new Notification('Alrazi Pharmacy Reminder', {
+            body: `You have ${w} patients needing reminder and ${o} overdue.`,
+            tag: 'pharmacy-reminder'
+        });
+    }
+
+    const tbody = document.getElementById('tbody');
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty">No patients found</div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = list.map(p => {
+        const d = getDays(p);
+        const refill = getRefill(p).toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'});
+        let st, sc;
+        if (d < 0) { st = 'Overdue ' + Math.abs(d) + 'd'; sc = 'danger'; }
+        else if (d <= 2) { st = d + ' days left'; sc = 'warn'; }
+        else { st = d + ' days left'; sc = 'ok'; }
+        return `<tr>
+            <td><div class="name">${p.name}</div><div class="phone">${p.phone}</div></td>
+            <td><div class="med">${p.med}</div>${p.notes ? '<div class="phone">'+p.notes+'</div>' : ''}</td>
+            <td>${refill}</td>
+            <td><span class="status ${sc}">${st}</span></td>
+            <td><div class="actions">
+                <button class="wa" onclick="sendWA('${p.id}')">📱</button>
+                <button class="edit" onclick="editP('${p.id}')">✏️</button>
+                <button class="del" onclick="delP('${p.id}')">🗑️</button>
+            </div></td>
+        </tr>`;
+    }).join('');
+}
+
+render();
+</script>
+
+</body>
+</html>
