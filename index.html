@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -22,6 +21,7 @@
         .btn-primary { background: #14b8a6; color: white; }
         .btn-secondary { background: #6c757d; color: white; }
         .btn:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; padding: 12px; background: #f8f9fa; color: #495057; font-size: 12px; text-transform: uppercase; }
         td { padding: 15px 12px; border-bottom: 1px solid #dee2e6; }
@@ -45,56 +45,114 @@
         .stat-label { color: #6c757d; font-size: 14px; }
         .stat.w { border-left: 4px solid #f59e0b; }
         .stat.d { border-left: 4px solid #ef4444; }
+        .loading { text-align: center; padding: 50px; color: #6c757d; }
+        .sync-status { text-align: center; padding: 10px; margin-bottom: 20px; border-radius: 8px; font-size: 14px; }
+        .sync-ok { background: rgba(16,185,129,0.1); color: #10b981; }
+        .sync-error { background: rgba(239,68,68,0.1); color: #ef4444; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Alrazi Refill Cash Patients System</h1>
+        
+        <div id="syncStatus" class="sync-status sync-ok">Connected to Google Sheets ✓</div>
 
-    <div class="stats">
-        <div class="stat"><div class="stat-num" id="total">0</div><div class="stat-label">Total Patients</div></div>
-        <div class="stat w"><div class="stat-num" id="warn">0</div><div class="stat-label">Need Reminder</div></div>
-        <div class="stat d"><div class="stat-num" id="over">0</div><div class="stat-label">Overdue</div></div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h3 style="margin-bottom:20px" id="formTitle">Add Patient</h3>
-            <form id="form">
-                <input type="hidden" id="pid">
-                <div class="form-group"><label>Patient Name</label><input type="text" id="name" required></div>
-                <div class="form-group"><label>Phone (e.g. 966512345678)</label><input type="tel" id="phone" required></div>
-                <div class="form-group"><label>Medication</label><input type="text" id="med" required></div>
-                <div class="row">
-                    <div class="form-group"><label>Dispense Date</label><input type="date" id="date" required></div>
-                    <div class="form-group"><label>Duration (days)</label><input type="number" id="days" value="30" required></div>
-                </div>
-                <div class="form-group"><label>Notes</label><input type="text" id="notes"></div>
-                <button type="submit" class="btn btn-primary" id="submitBtn">Add Patient</button>
-                <button type="button" class="btn btn-secondary" onclick="resetForm()">Cancel</button>
-            </form>
+        <div class="stats">
+            <div class="stat"><div class="stat-num" id="total">0</div><div class="stat-label">Total Patients</div></div>
+            <div class="stat w"><div class="stat-num" id="warn">0</div><div class="stat-label">Need Reminder</div></div>
+            <div class="stat d"><div class="stat-num" id="over">0</div><div class="stat-label">Overdue</div></div>
         </div>
 
-        <div class="card">
-            <h3>Patient Records</h3>
-            <input type="text" id="search" placeholder="Search..." style="margin-top:15px" oninput="render()">
-            <table><thead><tr><th>Patient</th><th>Medication</th><th>Refill Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table>
+        <div class="grid">
+            <div class="card">
+                <h3 style="margin-bottom:20px" id="formTitle">Add Patient</h3>
+                <form id="form">
+                    <input type="hidden" id="pid">
+                    <div class="form-group"><label>Patient Name</label><input type="text" id="name" required></div>
+                    <div class="form-group"><label>Phone (e.g. 966512345678)</label><input type="tel" id="phone" required></div>
+                    <div class="form-group"><label>Medication</label><input type="text" id="med" required></div>
+                    <div class="row">
+                        <div class="form-group"><label>Dispense Date</label><input type="date" id="date" required></div>
+                        <div class="form-group"><label>Duration (days)</label><input type="number" id="days" value="30" required></div>
+                    </div>
+                    <div class="form-group"><label>Notes</label><input type="text" id="notes"></div>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Add Patient</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">Cancel</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Patient Records</h3>
+                <input type="text" id="search" placeholder="Search..." style="margin-top:15px" oninput="render()">
+                <table><thead><tr><th>Patient</th><th>Medication</th><th>Refill Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table>
+            </div>
         </div>
     </div>
-</div>
 
 <script>
-let patients = JSON.parse(localStorage.getItem('patients')) || [];
-let editId = null;
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcQ5xSRbt_s_DWfw0ApuTLGrtKFcCpQF7EsgpBFL1ej3XA_TzgbgLONCQ07ibWckr0NA/exec';
 
-if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-}
+let patients = [];
+let editId = null;
 
 document.getElementById('date').valueAsDate = new Date();
 
-document.getElementById('form').onsubmit = function(e) {
+// Load data from Google Sheets on page load
+loadData();
+
+async function loadData() {
+    showLoading();
+    try {
+        const response = await fetch(SCRIPT_URL + '?action=get');
+        const data = await response.json();
+        patients = data.map(p => ({
+            id: String(p.id),
+            name: p.name,
+            phone: String(p.phone),
+            med: p.med,
+            date: formatDateForInput(p.date),
+            days: String(p.days),
+            notes: p.notes || ''
+        }));
+        showSyncStatus(true);
+        render();
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showSyncStatus(false);
+        // Fallback to localStorage
+        patients = JSON.parse(localStorage.getItem('patients')) || [];
+        render();
+    }
+}
+
+function formatDateForInput(dateValue) {
+    if (!dateValue) return '';
+    const d = new Date(dateValue);
+    if (isNaN(d)) return dateValue;
+    return d.toISOString().split('T')[0];
+}
+
+function showLoading() {
+    document.getElementById('tbody').innerHTML = '<tr><td colspan="5"><div class="loading">Loading data...</div></td></tr>';
+}
+
+function showSyncStatus(success) {
+    const el = document.getElementById('syncStatus');
+    if (success) {
+        el.className = 'sync-status sync-ok';
+        el.textContent = 'Connected to Google Sheets ✓';
+    } else {
+        el.className = 'sync-status sync-error';
+        el.textContent = 'Offline Mode - Using local storage';
+    }
+}
+
+document.getElementById('form').onsubmit = async function(e) {
     e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    
     const p = {
         id: editId || Date.now().toString(),
         name: document.getElementById('name').value,
@@ -104,20 +162,38 @@ document.getElementById('form').onsubmit = function(e) {
         days: document.getElementById('days').value,
         notes: document.getElementById('notes').value
     };
-    if (editId) {
-        const i = patients.findIndex(x => x.id === editId);
-        patients[i] = p;
-    } else {
-        patients.push(p);
+    
+    try {
+        const action = editId ? 'update' : 'add';
+        await fetch(SCRIPT_URL + '?action=' + action + '&data=' + encodeURIComponent(JSON.stringify(p)));
+        
+        if (editId) {
+            const i = patients.findIndex(x => x.id === editId);
+            patients[i] = p;
+        } else {
+            patients.push(p);
+        }
+        
+        // Backup to localStorage
+        localStorage.setItem('patients', JSON.stringify(patients));
+        showSyncStatus(true);
+    } catch (error) {
+        console.error('Error saving:', error);
+        showSyncStatus(false);
+        // Save locally anyway
+        if (editId) {
+            const i = patients.findIndex(x => x.id === editId);
+            patients[i] = p;
+        } else {
+            patients.push(p);
+        }
+        localStorage.setItem('patients', JSON.stringify(patients));
     }
-    save();
-    resetForm();
-};
-
-function save() {
-    localStorage.setItem('patients', JSON.stringify(patients));
+    
     render();
-}
+    resetForm();
+    btn.disabled = false;
+};
 
 function resetForm() {
     editId = null;
@@ -141,10 +217,20 @@ function editP(id) {
     document.getElementById('submitBtn').textContent = 'Update';
 }
 
-function delP(id) {
+async function delP(id) {
     if (confirm('Delete this patient?')) {
-        patients = patients.filter(x => x.id !== id);
-        save();
+        try {
+            await fetch(SCRIPT_URL + '?action=delete&id=' + id);
+            patients = patients.filter(x => x.id !== id);
+            localStorage.setItem('patients', JSON.stringify(patients));
+            showSyncStatus(true);
+        } catch (error) {
+            console.error('Error deleting:', error);
+            showSyncStatus(false);
+            patients = patients.filter(x => x.id !== id);
+            localStorage.setItem('patients', JSON.stringify(patients));
+        }
+        render();
     }
 }
 
@@ -184,18 +270,11 @@ function render() {
     let list = patients.filter(p => p.name.toLowerCase().includes(search) || p.med.toLowerCase().includes(search) || p.phone.includes(search));
     list.sort((a,b) => getRefill(a) - getRefill(b));
     
-    let t=0, w=0, o=0;
+    let w=0, o=0;
     patients.forEach(p => { const d = getDays(p); if(d<0) o++; else if(d<=2) w++; });
     document.getElementById('total').textContent = patients.length;
     document.getElementById('warn').textContent = w;
     document.getElementById('over').textContent = o;
-
-    if ('Notification' in window && Notification.permission === 'granted' && (w > 0 || o > 0)) {
-        new Notification('Alrazi Refill Cash Patients System Reminder', {
-            body: `You have ${w} patients needing reminder and ${o} overdue.`,
-            tag: 'pharmacy-reminder'
-        });
-    }
 
     const tbody = document.getElementById('tbody');
     if (list.length === 0) {
@@ -222,9 +301,6 @@ function render() {
         </tr>`;
     }).join('');
 }
-
-render();
 </script>
-
 </body>
 </html>
