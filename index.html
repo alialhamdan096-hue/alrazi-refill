@@ -497,7 +497,7 @@ function genReport() {
 }
 
 function exportExcel() {
-    let csv = 'Name,Phone,Medication,Dispense Date,Days,Notes,Reminder Sent,Reminder Date,Converted,Converted Date\n';
+    let csv = '\uFEFFName,Phone,Medication,Dispense Date,Days,Notes,Reminder Sent,Reminder Date,Converted,Converted Date\n';
     patients.forEach(p => { csv += `"${p.name}","${p.phone}","${p.med}","${p.date}","${p.days}","${p.notes}","${p.reminderSent}","${p.reminderDate}","${p.converted}","${p.convertedDate}"\n`; });
     download(csv, 'patients.csv', 'text/csv');
 }
@@ -505,12 +505,34 @@ function exportExcel() {
 function exportReport() {
     const m = document.getElementById('reportMonth').options[document.getElementById('reportMonth').value].text;
     const y = document.getElementById('reportYear').value;
-    let csv = `Alrazi Pharmacy Report - ${m} ${y}\n\nMetric,Count,Percentage\n`;
-    document.querySelectorAll('#summaryTb tr').forEach(r => { const c = r.querySelectorAll('td'); csv += `"${c[0].textContent}","${c[1].textContent}","${c[2].textContent}"\n`; });
-    csv += `\nConverted Patients\nName,Phone,Medication,Reminder Date,Converted Date\n`;
-    patients.filter(p => p.converted === 'yes' && new Date(p.reminderDate).getMonth() === parseInt(document.getElementById('reportMonth').value) && new Date(p.reminderDate).getFullYear() === parseInt(document.getElementById('reportYear').value))
-        .forEach(p => { csv += `"${p.name}","${p.phone}","${p.med}","${p.reminderDate}","${p.convertedDate}"\n`; });
-    download(csv, `report_${m}_${y}.csv`, 'text/csv');
+    
+    const mp = patients.filter(p => {
+        if (p.reminderSent !== 'yes') return false;
+        const rd = new Date(p.reminderDate);
+        return rd.getMonth() === parseInt(document.getElementById('reportMonth').value) && rd.getFullYear() === parseInt(y);
+    });
+    
+    const sent = mp.length;
+    const conv = mp.filter(p => p.converted === 'yes').length;
+    const waiting = sent - conv;
+    const rate = sent > 0 ? Math.round(conv/sent*100) : 0;
+    
+    let csv = '\uFEFF';
+    csv += 'Alrazi Pharmacy - Monthly Report\n';
+    csv += `Month,${m} ${y}\n\n`;
+    csv += 'Metric,Count,Percentage\n';
+    csv += `Reminders Sent,${sent},100%\n`;
+    csv += `Converted,${conv},${rate}%\n`;
+    csv += `Waiting,${waiting},${sent > 0 ? Math.round(waiting/sent*100) : 0}%\n`;
+    csv += '\n';
+    csv += 'Converted Patients\n';
+    csv += 'Name,Phone,Medication,Reminder Date,Converted Date\n';
+    
+    mp.filter(p => p.converted === 'yes').forEach(p => {
+        csv += `"${p.name}","${p.phone}","${p.med}","${p.reminderDate}","${p.convertedDate}"\n`;
+    });
+    
+    download(csv, `Alrazi_Report_${m}_${y}.csv`, 'text/csv');
 }
 
 function download(c, n, t) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], {type: t+';charset=utf-8'})); a.download = n; a.click(); }
