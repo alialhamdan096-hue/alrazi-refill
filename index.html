@@ -7,26 +7,26 @@
     <title>Alrazi Pharmacy</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #0a0f1c; color: #f1f5f9; min-height: 100vh; padding: 20px; }
+        body { font-family: Arial, sans-serif; background: white; color: #333; min-height: 100vh; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-        h1 { color: white; margin-bottom: 30px; text-align: center; }
+        h1 { color: #14b8a6; margin-bottom: 30px; text-align: center; }
         .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
         @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-        .card { background: #1a2234; border-radius: 15px; padding: 25px; border: 1px solid #2d3748; }
+        .card { background: #f8f9fa; border-radius: 15px; padding: 25px; border: 1px solid #dee2e6; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 14px; }
-        input { width: 100%; padding: 12px; background: #111827; border: 1px solid #2d3748; border-radius: 8px; color: #f1f5f9; font-size: 14px; }
+        label { display: block; margin-bottom: 5px; color: #495057; font-size: 14px; }
+        input { width: 100%; padding: 12px; background: white; border: 1px solid #ced4da; border-radius: 8px; color: #495057; font-size: 14px; }
         input:focus { outline: none; border-color: #14b8a6; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-primary { background: #14b8a6; color: white; }
-        .btn-secondary { background: #2d3748; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
         .btn:hover { opacity: 0.9; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; padding: 12px; background: #111827; color: #64748b; font-size: 12px; text-transform: uppercase; }
-        td { padding: 15px 12px; border-bottom: 1px solid #2d3748; }
+        th { text-align: left; padding: 12px; background: #f8f9fa; color: #495057; font-size: 12px; text-transform: uppercase; }
+        td { padding: 15px 12px; border-bottom: 1px solid #dee2e6; }
         .name { font-weight: bold; }
-        .phone { color: #64748b; font-size: 13px; }
+        .phone { color: #6c757d; font-size: 13px; }
         .med { color: #14b8a6; }
         .status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         .ok { background: rgba(16,185,129,0.2); color: #10b981; }
@@ -38,11 +38,11 @@
         .edit { background: rgba(20,184,166,0.2); color: #14b8a6; }
         .del { background: rgba(239,68,68,0.2); color: #ef4444; }
         .actions button:hover { opacity: 0.8; }
-        .empty { text-align: center; padding: 50px; color: #64748b; }
+        .empty { text-align: center; padding: 50px; color: #6c757d; }
         .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .stat { background: #1a2234; padding: 20px; border-radius: 12px; border: 1px solid #2d3748; }
+        .stat { background: white; padding: 20px; border-radius: 12px; border: 1px solid #dee2e6; }
         .stat-num { font-size: 32px; font-weight: bold; }
-        .stat-label { color: #64748b; font-size: 14px; }
+        .stat-label { color: #6c757d; font-size: 14px; }
         .stat.w { border-left: 4px solid #f59e0b; }
         .stat.d { border-left: 4px solid #ef4444; }
     </style>
