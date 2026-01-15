@@ -8,150 +8,283 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: white; color: #333; min-height: 100vh; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-        h1 { color: #14b8a6; margin-bottom: 30px; text-align: center; }
+        h1 { color: #14b8a6; margin-bottom: 10px; text-align: center; }
+        
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        .tab { background: #f0f0f0; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; color: #666; }
+        .tab.active { background: #14b8a6; color: white; }
+        .tab:hover { opacity: 0.9; }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+        
         .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
         @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-        .card { background: #f8f9fa; border-radius: 15px; padding: 25px; border: 1px solid #dee2e6; }
+        .card { background: #f8f9fa; border-radius: 15px; padding: 25px; border: 1px solid #dee2e6; margin-bottom: 20px; }
+        
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #495057; font-size: 14px; }
-        input { width: 100%; padding: 12px; background: white; border: 1px solid #ced4da; border-radius: 8px; color: #495057; font-size: 14px; }
-        input:focus { outline: none; border-color: #14b8a6; }
+        input, select { width: 100%; padding: 12px; background: white; border: 1px solid #ced4da; border-radius: 8px; color: #495057; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #14b8a6; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
         .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-primary { background: #14b8a6; color: white; }
         .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-info { background: #3b82f6; color: white; }
         .btn:hover { opacity: 0.9; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-sm { padding: 8px 16px; width: auto; margin: 0; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; padding: 12px; background: #f8f9fa; color: #495057; font-size: 12px; text-transform: uppercase; }
         td { padding: 15px 12px; border-bottom: 1px solid #dee2e6; }
+        tr:hover { background: #fafafa; }
         .name { font-weight: bold; }
         .phone { color: #6c757d; font-size: 13px; }
         .med { color: #14b8a6; }
-        .status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .ok { background: rgba(16,185,129,0.2); color: #10b981; }
-        .warn { background: rgba(245,158,11,0.2); color: #f59e0b; }
-        .danger { background: rgba(239,68,68,0.2); color: #ef4444; }
+        
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .badge-ok { background: rgba(16,185,129,0.2); color: #10b981; }
+        .badge-warn { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .badge-danger { background: rgba(239,68,68,0.2); color: #ef4444; }
+        
         .actions { display: flex; gap: 8px; }
         .actions button { width: 35px; height: 35px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
         .wa { background: rgba(37,211,102,0.2); color: #25D366; }
         .edit { background: rgba(20,184,166,0.2); color: #14b8a6; }
         .del { background: rgba(239,68,68,0.2); color: #ef4444; }
-        .actions button:hover { opacity: 0.8; }
+        .actions button:hover { opacity: 0.7; }
+        
         .empty { text-align: center; padding: 50px; color: #6c757d; }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat { background: white; padding: 20px; border-radius: 12px; border: 1px solid #dee2e6; }
         .stat-num { font-size: 32px; font-weight: bold; }
         .stat-label { color: #6c757d; font-size: 14px; }
         .stat.w { border-left: 4px solid #f59e0b; }
         .stat.d { border-left: 4px solid #ef4444; }
-        .loading { text-align: center; padding: 50px; color: #6c757d; }
-        .sync-status { text-align: center; padding: 10px; margin-bottom: 20px; border-radius: 8px; font-size: 14px; }
+        .stat.s { border-left: 4px solid #10b981; }
+        .stat.i { border-left: 4px solid #3b82f6; }
+        
+        .sync { text-align: center; padding: 8px; font-size: 13px; margin-bottom: 15px; border-radius: 8px; }
         .sync-ok { background: rgba(16,185,129,0.1); color: #10b981; }
-        .sync-error { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .sync-err { background: rgba(239,68,68,0.1); color: #ef4444; }
+        
+        .track-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .track-card { background: white; border: 1px solid #dee2e6; border-radius: 12px; padding: 20px; }
+        .track-card.converted { border-color: #10b981; background: rgba(16,185,129,0.05); }
+        .track-card .name { font-size: 16px; margin-bottom: 5px; }
+        .track-card .med { margin: 10px 0; }
+        .track-card .info { font-size: 13px; color: #6c757d; margin-bottom: 15px; }
+        .track-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; background: rgba(16,185,129,0.15); color: #10b981; }
+        .track-btn:hover { background: rgba(16,185,129,0.25); }
+        .track-btn.done { background: #10b981; color: white; cursor: default; }
+        
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .report-card { background: #f8f9fa; border-radius: 12px; padding: 25px; border: 1px solid #dee2e6; text-align: center; }
+        .report-value { font-size: 48px; font-weight: bold; color: #14b8a6; }
+        .report-label { font-size: 14px; color: #6c757d; margin-top: 5px; }
+        .progress { height: 12px; background: #e9ecef; border-radius: 6px; margin-top: 15px; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 6px; }
+        
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Alrazi Refill Cash Patients System</h1>
         
-        <div id="syncStatus" class="sync-status sync-ok">Connected to Google Sheets ✓</div>
+        <div class="tabs">
+            <button class="tab active" onclick="showPage('patients')">📋 Patients</button>
+            <button class="tab" onclick="showPage('tracking')">📊 Tracking</button>
+            <button class="tab" onclick="showPage('reports')">📈 Reports</button>
+        </div>
+        
+        <div id="sync" class="sync sync-ok">✓ Connected to Google Sheets</div>
 
-        <div class="stats">
-            <div class="stat"><div class="stat-num" id="total">0</div><div class="stat-label">Total Patients</div></div>
-            <div class="stat w"><div class="stat-num" id="warn">0</div><div class="stat-label">Need Reminder</div></div>
-            <div class="stat d"><div class="stat-num" id="over">0</div><div class="stat-label">Overdue</div></div>
+        <!-- PATIENTS PAGE -->
+        <div id="patientsPage" class="page active">
+            <div class="stats">
+                <div class="stat"><div class="stat-num" id="total">0</div><div class="stat-label">Total Patients</div></div>
+                <div class="stat w"><div class="stat-num" id="warn">0</div><div class="stat-label">Need Reminder</div></div>
+                <div class="stat d"><div class="stat-num" id="over">0</div><div class="stat-label">Overdue</div></div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3 style="margin-bottom:20px" id="formTitle">Add Patient</h3>
+                    <form id="form">
+                        <input type="hidden" id="pid">
+                        <div class="form-group"><label>Patient Name</label><input type="text" id="name" required></div>
+                        <div class="form-group"><label>Phone (e.g. 966512345678)</label><input type="tel" id="phone" required></div>
+                        <div class="form-group"><label>Medication</label><input type="text" id="med" required></div>
+                        <div class="row">
+                            <div class="form-group"><label>Dispense Date</label><input type="date" id="date" required></div>
+                            <div class="form-group"><label>Duration (days)</label><input type="number" id="days" value="30" required></div>
+                        </div>
+                        <div class="form-group"><label>Notes</label><input type="text" id="notes"></div>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Add Patient</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">Cancel</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="header-row">
+                        <h3>Patient Records</h3>
+                        <button class="btn btn-info btn-sm" onclick="exportExcel()">📥 Export</button>
+                    </div>
+                    <input type="text" id="search" placeholder="🔍 Search..." oninput="renderPatients()" style="margin-bottom: 15px;">
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead><tr><th>Patient</th><th>Medication</th><th>Refill Date</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="patientsTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="grid">
-            <div class="card">
-                <h3 style="margin-bottom:20px" id="formTitle">Add Patient</h3>
-                <form id="form">
-                    <input type="hidden" id="pid">
-                    <div class="form-group"><label>Patient Name</label><input type="text" id="name" required></div>
-                    <div class="form-group"><label>Phone (e.g. 966512345678)</label><input type="tel" id="phone" required></div>
-                    <div class="form-group"><label>Medication</label><input type="text" id="med" required></div>
-                    <div class="row">
-                        <div class="form-group"><label>Dispense Date</label><input type="date" id="date" required></div>
-                        <div class="form-group"><label>Duration (days)</label><input type="number" id="days" value="30" required></div>
-                    </div>
-                    <div class="form-group"><label>Notes</label><input type="text" id="notes"></div>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">Add Patient</button>
-                    <button type="button" class="btn btn-secondary" onclick="resetForm()">Cancel</button>
-                </form>
+        <!-- TRACKING PAGE -->
+        <div id="trackingPage" class="page">
+            <div class="stats">
+                <div class="stat i"><div class="stat-num" id="tSent">0</div><div class="stat-label">Reminders Sent</div></div>
+                <div class="stat s"><div class="stat-num" id="tConverted">0</div><div class="stat-label">Converted</div></div>
+                <div class="stat" style="border-left: 4px solid #14b8a6;"><div class="stat-num" id="tRate">0%</div><div class="stat-label">Conversion Rate</div></div>
             </div>
 
             <div class="card">
-                <h3>Patient Records</h3>
-                <input type="text" id="search" placeholder="Search..." style="margin-top:15px" oninput="render()">
-                <table><thead><tr><th>Patient</th><th>Medication</th><th>Refill Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table>
+                <div class="header-row">
+                    <h3>📊 Track Conversions</h3>
+                    <select id="trackFilter" onchange="renderTracking()" style="width: auto; min-width: 150px;">
+                        <option value="all">All Sent</option>
+                        <option value="waiting">⏳ Waiting</option>
+                        <option value="converted">✅ Converted</option>
+                    </select>
+                </div>
+                <div class="track-grid" id="trackGrid"></div>
+            </div>
+        </div>
+
+        <!-- REPORTS PAGE -->
+        <div id="reportsPage" class="page">
+            <div class="card">
+                <div class="header-row">
+                    <h3>📈 Monthly Report</h3>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <select id="reportMonth" onchange="genReport()" style="width: auto;">
+                            <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                            <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                            <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                            <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+                        </select>
+                        <select id="reportYear" onchange="genReport()" style="width: auto;">
+                            <option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option>
+                        </select>
+                        <button class="btn btn-success btn-sm" onclick="exportReport()">📥 Export</button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="report-grid">
+                <div class="report-card">
+                    <div class="report-value" id="rSent">0</div>
+                    <div class="report-label">📤 Reminders Sent</div>
+                </div>
+                <div class="report-card">
+                    <div class="report-value" style="color: #10b981;" id="rConverted">0</div>
+                    <div class="report-label">✅ Converted</div>
+                </div>
+                <div class="report-card">
+                    <div class="report-value" style="color: #3b82f6;" id="rRate">0%</div>
+                    <div class="report-label">📊 Conversion Rate</div>
+                    <div class="progress"><div class="progress-bar" id="rBar" style="width:0%; background:#10b981;"></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">📋 Summary</h3>
+                <table>
+                    <thead><tr><th>Metric</th><th>Count</th><th>Percentage</th></tr></thead>
+                    <tbody id="summaryTb"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">✅ Converted Patients</h3>
+                <table>
+                    <thead><tr><th>Patient</th><th>Phone</th><th>Medication</th><th>Reminder Date</th><th>Converted Date</th></tr></thead>
+                    <tbody id="convList"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcQ5xSRbt_s_DWfw0ApuTLGrtKFcCpQF7EsgpBFL1ej3XA_TzgbgLONCQ07ibWckr0NA/exec';
-
+const API = 'https://script.google.com/macros/s/AKfycbxcQ5xSRbt_s_DWfw0ApuTLGrtKFcCpQF7EsgpBFL1ej3XA_TzgbgLONCQ07ibWckr0NA/exec';
 let patients = [];
 let editId = null;
 
+document.getElementById('reportMonth').value = new Date().getMonth();
+document.getElementById('reportYear').value = new Date().getFullYear();
 document.getElementById('date').valueAsDate = new Date();
 
-// Load data from Google Sheets on page load
 loadData();
 
+function showPage(p) {
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.getElementById(p + 'Page').classList.add('active');
+    event.target.classList.add('active');
+    if (p === 'tracking') renderTracking();
+    if (p === 'reports') genReport();
+}
+
 async function loadData() {
-    showLoading();
+    document.getElementById('patientsTbody').innerHTML = '<tr><td colspan="5"><div class="empty">Loading...</div></td></tr>';
     try {
-        const response = await fetch(SCRIPT_URL + '?action=get');
-        const data = await response.json();
+        const res = await fetch(API + '?action=get');
+        const data = await res.json();
         patients = data.map(p => ({
-            id: String(p.id),
-            name: p.name,
-            phone: String(p.phone),
-            med: p.med,
-            date: formatDateForInput(p.date),
-            days: String(p.days),
-            notes: p.notes || ''
+            id: String(p.id || ''),
+            name: p.name || '',
+            phone: String(p.phone || ''),
+            med: p.med || '',
+            date: fmtDate(p.date),
+            days: String(p.days || '30'),
+            notes: p.notes || '',
+            reminderSent: p.reminderSent || 'no',
+            reminderDate: fmtDate(p.reminderDate),
+            converted: p.converted || 'no',
+            convertedDate: fmtDate(p.convertedDate)
         }));
-        showSyncStatus(true);
-        render();
-    } catch (error) {
-        console.error('Error loading data:', error);
-        showSyncStatus(false);
-        // Fallback to localStorage
+        syncStatus(true);
+        renderPatients();
+    } catch (e) {
+        syncStatus(false);
         patients = JSON.parse(localStorage.getItem('patients')) || [];
-        render();
+        renderPatients();
     }
 }
 
-function formatDateForInput(dateValue) {
-    if (!dateValue) return '';
-    const d = new Date(dateValue);
-    if (isNaN(d)) return dateValue;
-    return d.toISOString().split('T')[0];
+function fmtDate(v) {
+    if (!v) return '';
+    const d = new Date(v);
+    return isNaN(d) ? v : d.toISOString().split('T')[0];
 }
 
-function showLoading() {
-    document.getElementById('tbody').innerHTML = '<tr><td colspan="5"><div class="loading">Loading data...</div></td></tr>';
-}
-
-function showSyncStatus(success) {
-    const el = document.getElementById('syncStatus');
-    if (success) {
-        el.className = 'sync-status sync-ok';
-        el.textContent = 'Connected to Google Sheets ✓';
-    } else {
-        el.className = 'sync-status sync-error';
-        el.textContent = 'Offline Mode - Using local storage';
-    }
+function syncStatus(ok) {
+    const el = document.getElementById('sync');
+    el.className = ok ? 'sync sync-ok' : 'sync sync-err';
+    el.textContent = ok ? '✓ Connected to Google Sheets' : '⚠ Offline Mode';
 }
 
 document.getElementById('form').onsubmit = async function(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = 'Saving...';
+    btn.disabled = true; btn.textContent = 'Saving...';
     
     const p = {
         id: editId || Date.now().toString(),
@@ -160,39 +293,31 @@ document.getElementById('form').onsubmit = async function(e) {
         med: document.getElementById('med').value,
         date: document.getElementById('date').value,
         days: document.getElementById('days').value,
-        notes: document.getElementById('notes').value
+        notes: document.getElementById('notes').value,
+        reminderSent: 'no', reminderDate: '', converted: 'no', convertedDate: ''
     };
     
-    try {
-        const action = editId ? 'update' : 'add';
-        await fetch(SCRIPT_URL + '?action=' + action + '&data=' + encodeURIComponent(JSON.stringify(p)));
-        
-        if (editId) {
-            const i = patients.findIndex(x => x.id === editId);
-            patients[i] = p;
-        } else {
-            patients.push(p);
-        }
-        
-        // Backup to localStorage
-        localStorage.setItem('patients', JSON.stringify(patients));
-        showSyncStatus(true);
-    } catch (error) {
-        console.error('Error saving:', error);
-        showSyncStatus(false);
-        // Save locally anyway
-        if (editId) {
-            const i = patients.findIndex(x => x.id === editId);
-            patients[i] = p;
-        } else {
-            patients.push(p);
-        }
-        localStorage.setItem('patients', JSON.stringify(patients));
+    if (editId) {
+        const old = patients.find(x => x.id === editId);
+        p.reminderSent = old.reminderSent; p.reminderDate = old.reminderDate;
+        p.converted = old.converted; p.convertedDate = old.convertedDate;
     }
     
-    render();
-    resetForm();
-    btn.disabled = false;
+    try {
+        await fetch(API + '?action=' + (editId ? 'update' : 'add') + '&data=' + encodeURIComponent(JSON.stringify(p)));
+        if (editId) patients[patients.findIndex(x => x.id === editId)] = p;
+        else patients.push(p);
+        localStorage.setItem('patients', JSON.stringify(patients));
+        syncStatus(true);
+    } catch (e) {
+        if (editId) patients[patients.findIndex(x => x.id === editId)] = p;
+        else patients.push(p);
+        localStorage.setItem('patients', JSON.stringify(patients));
+        syncStatus(false);
+    }
+    
+    renderPatients(); resetForm();
+    btn.disabled = false; btn.textContent = 'Add Patient';
 };
 
 function resetForm() {
@@ -215,22 +340,15 @@ function editP(id) {
     document.getElementById('notes').value = p.notes || '';
     document.getElementById('formTitle').textContent = 'Edit Patient';
     document.getElementById('submitBtn').textContent = 'Update';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function delP(id) {
     if (confirm('Delete this patient?')) {
-        try {
-            await fetch(SCRIPT_URL + '?action=delete&id=' + id);
-            patients = patients.filter(x => x.id !== id);
-            localStorage.setItem('patients', JSON.stringify(patients));
-            showSyncStatus(true);
-        } catch (error) {
-            console.error('Error deleting:', error);
-            showSyncStatus(false);
-            patients = patients.filter(x => x.id !== id);
-            localStorage.setItem('patients', JSON.stringify(patients));
-        }
-        render();
+        try { await fetch(API + '?action=delete&id=' + id); } catch (e) {}
+        patients = patients.filter(x => x.id !== id);
+        localStorage.setItem('patients', JSON.stringify(patients));
+        renderPatients();
     }
 }
 
@@ -249,8 +367,27 @@ function sendWA(id) {
 
 - التوصيل لموقعكم
 
+موقع الصيدلية:
+https://shorturl.at/M2Cq3
+
 نتمنى لكم دوام الصحة والعافية`;
     window.open('https://wa.me/' + p.phone + '?text=' + encodeURIComponent(msg), '_blank');
+    p.reminderSent = 'yes';
+    p.reminderDate = new Date().toISOString().split('T')[0];
+    saveP(p);
+}
+
+async function saveP(p) {
+    try { await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p))); } catch (e) {}
+    localStorage.setItem('patients', JSON.stringify(patients));
+    renderPatients(); renderTracking();
+}
+
+async function markConverted(id) {
+    const p = patients.find(x => x.id === id);
+    p.converted = 'yes';
+    p.convertedDate = new Date().toISOString().split('T')[0];
+    await saveP(p);
 }
 
 function getRefill(p) {
@@ -265,42 +402,118 @@ function getDays(p) {
     return Math.ceil((refill - today) / (1000*60*60*24));
 }
 
-function render() {
+function renderPatients() {
     const search = document.getElementById('search').value.toLowerCase();
     let list = patients.filter(p => p.name.toLowerCase().includes(search) || p.med.toLowerCase().includes(search) || p.phone.includes(search));
     list.sort((a,b) => getRefill(a) - getRefill(b));
     
     let w=0, o=0;
-    patients.forEach(p => { const d = getDays(p); if(d<0) o++; else if(d<=2) w++; });
+    patients.forEach(p => { const d = getDays(p); if (d < 0) o++; else if (d <= 2) w++; });
     document.getElementById('total').textContent = patients.length;
     document.getElementById('warn').textContent = w;
     document.getElementById('over').textContent = o;
 
-    const tbody = document.getElementById('tbody');
-    if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5"><div class="empty">No patients found</div></td></tr>';
-        return;
-    }
+    const tbody = document.getElementById('patientsTbody');
+    if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty">No patients found</div></td></tr>'; return; }
+    
     tbody.innerHTML = list.map(p => {
         const d = getDays(p);
         const refill = getRefill(p).toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'});
         let st, sc;
         if (d < 0) { st = 'Overdue ' + Math.abs(d) + 'd'; sc = 'danger'; }
-        else if (d <= 2) { st = d + ' days left'; sc = 'warn'; }
-        else { st = d + ' days left'; sc = 'ok'; }
+        else if (d <= 2) { st = d + 'd left'; sc = 'warn'; }
+        else { st = d + 'd left'; sc = 'ok'; }
+        
         return `<tr>
             <td><div class="name">${p.name}</div><div class="phone">${p.phone}</div></td>
             <td><div class="med">${p.med}</div>${p.notes ? '<div class="phone">'+p.notes+'</div>' : ''}</td>
             <td>${refill}</td>
-            <td><span class="status ${sc}">${st}</span></td>
+            <td><span class="badge badge-${sc}">${st}</span></td>
             <td><div class="actions">
-                <button class="wa" onclick="sendWA('${p.id}')">📱</button>
-                <button class="edit" onclick="editP('${p.id}')">✏️</button>
-                <button class="del" onclick="delP('${p.id}')">🗑️</button>
+                <button class="wa" onclick="sendWA('${p.id}')" title="WhatsApp">📱</button>
+                <button class="edit" onclick="editP('${p.id}')" title="Edit">✏️</button>
+                <button class="del" onclick="delP('${p.id}')" title="Delete">🗑️</button>
             </div></td>
         </tr>`;
     }).join('');
 }
+
+function renderTracking() {
+    const filter = document.getElementById('trackFilter').value;
+    let list = patients.filter(p => p.reminderSent === 'yes');
+    if (filter === 'waiting') list = list.filter(p => p.converted !== 'yes');
+    else if (filter === 'converted') list = list.filter(p => p.converted === 'yes');
+    list.sort((a,b) => new Date(b.reminderDate) - new Date(a.reminderDate));
+    
+    const sent = patients.filter(p => p.reminderSent === 'yes').length;
+    const conv = patients.filter(p => p.converted === 'yes').length;
+    document.getElementById('tSent').textContent = sent;
+    document.getElementById('tConverted').textContent = conv;
+    document.getElementById('tRate').textContent = sent > 0 ? Math.round(conv/sent*100) + '%' : '0%';
+    
+    const grid = document.getElementById('trackGrid');
+    if (list.length === 0) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1;">No records found</div>'; return; }
+    
+    grid.innerHTML = list.map(p => `
+        <div class="track-card ${p.converted === 'yes' ? 'converted' : ''}">
+            <div class="name">${p.name}</div>
+            <div class="phone">${p.phone}</div>
+            <div class="med">${p.med}</div>
+            <div class="info">📤 Sent: ${p.reminderDate}${p.converted === 'yes' ? '<br>✅ Converted: ' + p.convertedDate : ''}</div>
+            ${p.converted === 'yes' ? '<button class="track-btn done">✅ Converted</button>' : `<button class="track-btn" onclick="markConverted('${p.id}')">✅ Mark as Converted</button>`}
+        </div>
+    `).join('');
+}
+
+function genReport() {
+    const m = parseInt(document.getElementById('reportMonth').value);
+    const y = parseInt(document.getElementById('reportYear').value);
+    
+    const mp = patients.filter(p => {
+        if (p.reminderSent !== 'yes') return false;
+        const rd = new Date(p.reminderDate);
+        return rd.getMonth() === m && rd.getFullYear() === y;
+    });
+    
+    const sent = mp.length;
+    const conv = mp.filter(p => p.converted === 'yes').length;
+    const rate = sent > 0 ? Math.round(conv/sent*100) : 0;
+    
+    document.getElementById('rSent').textContent = sent;
+    document.getElementById('rConverted').textContent = conv;
+    document.getElementById('rRate').textContent = rate + '%';
+    document.getElementById('rBar').style.width = rate + '%';
+    
+    document.getElementById('summaryTb').innerHTML = `
+        <tr><td>📤 Reminders Sent</td><td>${sent}</td><td>100%</td></tr>
+        <tr><td>✅ Converted</td><td>${conv}</td><td>${rate}%</td></tr>
+        <tr><td>⏳ Waiting</td><td>${sent - conv}</td><td>${sent > 0 ? Math.round((sent-conv)/sent*100) : 0}%</td></tr>
+    `;
+    
+    const convP = mp.filter(p => p.converted === 'yes');
+    document.getElementById('convList').innerHTML = convP.length > 0 
+        ? convP.map(p => `<tr><td class="name">${p.name}</td><td class="phone">${p.phone}</td><td class="med">${p.med}</td><td>${p.reminderDate}</td><td>${p.convertedDate}</td></tr>`).join('')
+        : '<tr><td colspan="5"><div class="empty">No conversions this month</div></td></tr>';
+}
+
+function exportExcel() {
+    let csv = 'Name,Phone,Medication,Dispense Date,Days,Notes,Reminder Sent,Reminder Date,Converted,Converted Date\n';
+    patients.forEach(p => { csv += `"${p.name}","${p.phone}","${p.med}","${p.date}","${p.days}","${p.notes}","${p.reminderSent}","${p.reminderDate}","${p.converted}","${p.convertedDate}"\n`; });
+    download(csv, 'patients.csv', 'text/csv');
+}
+
+function exportReport() {
+    const m = document.getElementById('reportMonth').options[document.getElementById('reportMonth').value].text;
+    const y = document.getElementById('reportYear').value;
+    let csv = `Alrazi Pharmacy Report - ${m} ${y}\n\nMetric,Count,Percentage\n`;
+    document.querySelectorAll('#summaryTb tr').forEach(r => { const c = r.querySelectorAll('td'); csv += `"${c[0].textContent}","${c[1].textContent}","${c[2].textContent}"\n`; });
+    csv += `\nConverted Patients\nName,Phone,Medication,Reminder Date,Converted Date\n`;
+    patients.filter(p => p.converted === 'yes' && new Date(p.reminderDate).getMonth() === parseInt(document.getElementById('reportMonth').value) && new Date(p.reminderDate).getFullYear() === parseInt(document.getElementById('reportYear').value))
+        .forEach(p => { csv += `"${p.name}","${p.phone}","${p.med}","${p.reminderDate}","${p.convertedDate}"\n`; });
+    download(csv, `report_${m}_${y}.csv`, 'text/csv');
+}
+
+function download(c, n, t) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], {type: t+';charset=utf-8'})); a.download = n; a.click(); }
 </script>
 </body>
 </html>
