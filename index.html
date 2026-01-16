@@ -371,7 +371,8 @@ https://shorturl.at/M2Cq3
 نتمنى لكم دوام الصحة والعافية`;
     window.open('https://wa.me/' + p.phone + '?text=' + encodeURIComponent(msg), '_blank');
     p.reminderSent = 'yes';
-    p.reminderDate = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    p.reminderDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
     saveP(p);
 }
 
@@ -384,7 +385,8 @@ async function saveP(p) {
 async function markConverted(id) {
     const p = patients.find(x => x.id === id);
     p.converted = 'yes';
-    p.convertedDate = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    p.convertedDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
     await saveP(p);
 }
 
