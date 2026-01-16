@@ -129,6 +129,7 @@
             <div class="report-grid">
                 <div class="report-card"><div class="report-value" id="rSent">0</div><div class="report-label">Reminders Sent</div></div>
                 <div class="report-card"><div class="report-value" id="rConverted">0</div><div class="report-label">Converted</div></div>
+                <div class="report-card"><div class="report-value" id="rRate">0%</div><div class="report-label">Conversion Rate</div></div>
             </div>
         </div>
     </div>
@@ -138,21 +139,14 @@ const API = 'https://script.google.com/macros/s/AKfycbyLnOK9PXLM7Z6_ERgT84nul50S
 let patients = [];
 let editId = null;
 
-// الدالة الذكية لمعالجة التاريخ بكل الحالات (نص عادي، توقيت قوقل، أو تاريخ جديد)
+// الدالة الذكية لمعالجة التاريخ
 function fmtDate(v) {
     if (!v) return '';
-    
-    // إذا كان التاريخ يحتوي على توقيت (حرف T)
     if (typeof v === 'string' && v.includes('T')) {
         const d = new Date(v);
-        // حوله لتوقيت محلي 
         return d.toLocaleDateString('en-CA');
     }
-    
-    // إذا كان نص عادي (مثال: 2026-01-16)
     if (typeof v === 'string') return v;
-    
-    // إذا كان كائن
     const d = new Date(v);
     if (isNaN(d)) return '';
     return d.toLocaleDateString('en-CA');
@@ -172,6 +166,7 @@ async function loadData() {
             convertedDate: fmtDate(p.convertedDate)
         }));
         renderPatients();
+        renderReports(); // تحديث التقارير عند التحميل
     } catch (e) {
         console.error("Error loading data");
     }
@@ -183,6 +178,7 @@ function showPage(p) {
     document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
     document.getElementById(p + 'Page').classList.add('active');
     if (p === 'tracking') renderTracking();
+    if (p === 'reports') renderReports(); // تحديث التقارير عند فتح الصفحة
 }
 
 document.getElementById('form').onsubmit = async function(e) {
@@ -212,6 +208,7 @@ document.getElementById('form').onsubmit = async function(e) {
         if (editId) patients[patients.findIndex(x => x.id === editId)] = p;
         else patients.push(p);
         renderPatients();
+        renderReports(); // تحديث التقارير بعد الإضافة
         resetForm();
     } catch (e) {
         alert("Error saving data");
@@ -232,20 +229,12 @@ function editP(id) {
     document.getElementById('submitBtn').textContent = 'Update';
 }
 
-// دالة الحذف الجديدة
 async function delP(id) {
     if (!confirm('هل أنت متأكد من حذف هذا المريض؟')) return;
-    
-    // الحذف فوراً من الشاشة
     patients = patients.filter(x => x.id !== id);
     renderPatients();
-    
-    // الحذف من السيرفر
-    try {
-        await fetch(API + '?action=delete&id=' + id);
-    } catch (e) {
-        alert('فشل الحذف من السيرفر');
-    }
+    renderReports(); // تحديث التقارير بعد الحذف
+    try { await fetch(API + '?action=delete&id=' + id); } catch (e) {}
 }
 
 function resetForm() {
@@ -297,6 +286,8 @@ async function sendWA(id) {
     p.reminderSent = 'yes';
     p.reminderDate = fmtDate(new Date()); 
     await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p)));
+    renderTracking();
+    renderReports();
 }
 
 async function markConverted(id) {
@@ -305,6 +296,7 @@ async function markConverted(id) {
     p.convertedDate = fmtDate(new Date());
     await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p)));
     renderTracking();
+    renderReports(); // تحديث التقارير فوراً
 }
 
 async function undoConverted(id) {
@@ -314,6 +306,7 @@ async function undoConverted(id) {
     p.convertedDate = '';
     await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p)));
     renderTracking();
+    renderReports(); // تحديث التقارير فوراً
 }
 
 function renderTracking() {
@@ -330,6 +323,17 @@ function renderTracking() {
             }
         </div>
     `).join('');
+}
+
+// دالة حساب التقارير (أضيفت جديداً)
+function renderReports() {
+    const sent = patients.filter(p => p.reminderSent === 'yes').length;
+    const conv = patients.filter(p => p.converted === 'yes').length;
+    const rate = sent > 0 ? Math.round((conv / sent) * 100) : 0;
+
+    document.getElementById('rSent').textContent = sent;
+    document.getElementById('rConverted').textContent = conv;
+    document.getElementById('rRate').textContent = rate + '%';
 }
 </script>
 </body>
