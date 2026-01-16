@@ -140,18 +140,26 @@ const API = 'https://script.google.com/macros/s/AKfycbyLnOK9PXLM7Z6_ERgT84nul50S
 let patients = [];
 let editId = null;
 
-// دالة محسنة لجلب التاريخ بتوقيت السعودية ومنع نقص الأيام
+// الحل النهائي: دالة تجبر التاريخ على البقاء كما هو في تقويم جهازك
 function fmtDate(v) {
     if (!v) return '';
+    
+    // إذا كان التاريخ نص (جاي من جوجل أو قاعدة البيانات)
+    if (typeof v === 'string') {
+        // نأخذ الجزء الأول فقط (السنة-الشهر-اليوم) ونتجاهل الوقت
+        return v.split('T')[0];
+    }
+    
+    // إذا كان كائن تاريخ (تونا مسوينه)
     const d = new Date(v);
-    if (isNaN(d)) return v;
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    if (isNaN(d)) return '';
+    
+    // الحل السحري: تنسيق كندي يطابق شكل التقويم (YYYY-MM-DD)
+    // ويستخدم توقيتك المحلي، فيضمن عدم تغير اليوم
+    return d.toLocaleDateString('en-CA');
 }
 
-// تعيين تاريخ اليوم في خانة التاريخ عند فتح الصفحة
+// وضع تاريخ اليوم كقيمة افتراضية
 document.getElementById('date').value = fmtDate(new Date());
 
 async function loadData() {
@@ -161,6 +169,7 @@ async function loadData() {
         patients = data.map(p => ({
             ...p,
             id: String(p.id),
+            // نمرر التاريخ للدالة الجديدة لضمان عرضه بشكل صحيح
             date: fmtDate(p.date),
             reminderDate: fmtDate(p.reminderDate),
             convertedDate: fmtDate(p.convertedDate)
@@ -189,7 +198,8 @@ document.getElementById('form').onsubmit = async function(e) {
         name: document.getElementById('name').value,
         phone: document.getElementById('phone').value.replace(/\D/g, ''),
         med: document.getElementById('med').value,
-        date: document.getElementById('date').value,
+        // القيمة هنا تأتي من التقويم مباشرة كنص ثابت (2026-01-16)
+        date: document.getElementById('date').value, 
         days: document.getElementById('days').value,
         notes: document.getElementById('notes').value,
         reminderSent: 'no', reminderDate: '', converted: 'no', convertedDate: ''
@@ -219,6 +229,7 @@ function editP(id) {
     document.getElementById('name').value = p.name;
     document.getElementById('phone').value = p.phone;
     document.getElementById('med').value = p.med;
+    // هنا يتم وضع التاريخ في الخانة كما هو محفوظ تماماً
     document.getElementById('date').value = p.date;
     document.getElementById('days').value = p.days;
     document.getElementById('notes').value = p.notes || '';
@@ -272,14 +283,14 @@ async function sendWA(id) {
     const msg = `تذكير بموعد صرف دواء: ${p.med}`;
     window.open('https://wa.me/' + p.phone + '?text=' + encodeURIComponent(msg), '_blank');
     p.reminderSent = 'yes';
-    p.reminderDate = fmtDate(new Date()); // استخدام التاريخ المحلي الفعلي
+    p.reminderDate = fmtDate(new Date()); 
     await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p)));
 }
 
 async function markConverted(id) {
     const p = patients.find(x => x.id === id);
     p.converted = 'yes';
-    p.convertedDate = fmtDate(new Date()); // استخدام التاريخ المحلي الفعلي
+    p.convertedDate = fmtDate(new Date());
     await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p)));
     renderTracking();
 }
