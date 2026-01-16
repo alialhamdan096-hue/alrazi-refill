@@ -133,7 +133,6 @@
                 <div class="card">
                     <div class="header-row">
                         <h3>Patient Records</h3>
-                        <button class="btn btn-info btn-sm" onclick="exportExcel()">📥 Export</button>
                     </div>
                     <input type="text" id="search" placeholder="🔍 Search..." oninput="renderPatients()" style="margin-bottom: 15px;">
                     <div style="overflow-x: auto;">
@@ -182,7 +181,6 @@
                         <select id="reportYear" onchange="genReport()" style="width: auto;">
                             <option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option>
                         </select>
-                        <button class="btn btn-success btn-sm" onclick="exportReport()">📥 Export</button>
                         <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print</button>
                     </div>
                 </div>
@@ -390,6 +388,13 @@ async function markConverted(id) {
     await saveP(p);
 }
 
+async function undoConverted(id) {
+    const p = patients.find(x => x.id === id);
+    p.converted = 'no';
+    p.convertedDate = '';
+    await saveP(p);
+}
+
 function getRefill(p) {
     const d = new Date(p.date);
     d.setDate(d.getDate() + parseInt(p.days));
@@ -460,7 +465,7 @@ function renderTracking() {
             <div class="phone">${p.phone}</div>
             <div class="med">${p.med}</div>
             <div class="info">📤 Sent: ${p.reminderDate}${p.converted === 'yes' ? '<br>✅ Converted: ' + p.convertedDate : ''}</div>
-            ${p.converted === 'yes' ? '<button class="track-btn done">✅ Converted</button>' : `<button class="track-btn" onclick="markConverted('${p.id}')">✅ Mark as Converted</button>`}
+            ${p.converted === 'yes' ? `<button class="track-btn done" onclick="undoConverted('${p.id}')">✅ Converted (Click to Undo)</button>` : `<button class="track-btn" onclick="markConverted('${p.id}')">✅ Mark as Converted</button>`}
         </div>
     `).join('');
 }
@@ -496,47 +501,7 @@ function genReport() {
         : '<tr><td colspan="5"><div class="empty">No conversions this month</div></td></tr>';
 }
 
-function exportExcel() {
-    let data = 'Name\tPhone\tMedication\tDispense Date\tDays\tNotes\tReminder Sent\tReminder Date\tConverted\tConverted Date\n';
-    patients.forEach(p => { data += `${p.name}\t${p.phone}\t${p.med}\t${p.date}\t${p.days}\t${p.notes}\t${p.reminderSent}\t${p.reminderDate}\t${p.converted}\t${p.convertedDate}\n`; });
-    const blob = new Blob(['\uFEFF' + data], {type: 'application/vnd.ms-excel;charset=utf-8'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'patients.xls'; a.click();
-}
-
-function exportReport() {
-    const m = document.getElementById('reportMonth').options[document.getElementById('reportMonth').value].text;
-    const y = document.getElementById('reportYear').value;
-    
-    const mp = patients.filter(p => {
-        if (p.reminderSent !== 'yes') return false;
-        const rd = new Date(p.reminderDate);
-        return rd.getMonth() === parseInt(document.getElementById('reportMonth').value) && rd.getFullYear() === parseInt(y);
-    });
-    
-    const sent = mp.length;
-    const conv = mp.filter(p => p.converted === 'yes').length;
-    const waiting = sent - conv;
-    const rate = sent > 0 ? Math.round(conv/sent*100) : 0;
-    
-    let data = 'Alrazi Pharmacy - Monthly Report\n';
-    data += `Month:\t${m} ${y}\n\n`;
-    data += 'Metric\tCount\tPercentage\n';
-    data += `Reminders Sent\t${sent}\t100%\n`;
-    data += `Converted\t${conv}\t${rate}%\n`;
-    data += `Waiting\t${waiting}\t${sent > 0 ? Math.round(waiting/sent*100) : 0}%\n`;
-    data += '\n\nConverted Patients\n';
-    data += 'Name\tPhone\tMedication\tReminder Date\tConverted Date\n';
-    
-    mp.filter(p => p.converted === 'yes').forEach(p => {
-        data += `${p.name}\t${p.phone}\t${p.med}\t${p.reminderDate}\t${p.convertedDate}\n`;
-    });
-    
-    const blob = new Blob(['\uFEFF' + data], {type: 'application/vnd.ms-excel;charset=utf-8'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Alrazi_Report_${m}_${y}.xls`; a.click();
-}
-
 function download(c, n, t) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], {type: t+';charset=utf-8'})); a.download = n; a.click(); }
 </script>
 </body>
 </html>
-
