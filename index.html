@@ -80,7 +80,7 @@
         .track-card .info { font-size: 13px; color: #6c757d; margin-bottom: 15px; }
         .track-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; background: rgba(16,185,129,0.15); color: #10b981; }
         .track-btn:hover { background: rgba(16,185,129,0.25); }
-        .track-btn.done { background: #10b981; color: white; cursor: default; }
+        .track-btn.done { background: #10b981; color: white; cursor: pointer; }
         
         .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .report-card { background: #f8f9fa; border-radius: 12px; padding: 25px; border: 1px solid #dee2e6; text-align: center; }
@@ -94,34 +94,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Alrazi Pharmacy Group System</h1>
+        <h1>Alrazi Refill Cash Patients System</h1>
         
-        <div class="card" style="margin-bottom: 20px; text-align: center;">
-            <label style="font-size: 16px; margin-right: 10px;">Select Pharmacy:</label>
-            <select id="pharmacySelect" onchange="changePharmacy()" style="width: auto; min-width: 200px; font-size: 16px; padding: 10px;">
-                <option value="">-- Select Pharmacy --</option>
-                <option value="BADAYA1">BADAYA1</option>
-                <option value="BADAYA2">BADAYA2</option>
-                <option value="BUKAYRIAH1">BUKAYRIAH1</option>
-                <option value="BUKAYRIAH2">BUKAYRIAH2</option>
-                <option value="BUKAYRIAH.MOR">BUKAYRIAH.MOR</option>
-                <option value="BURIDAH1">BURIDAH1</option>
-                <option value="BURIDAH2">BURIDAH2</option>
-                <option value="KHABRA1">KHABRA1</option>
-                <option value="MITHNAB1">MITHNAB1</option>
-                <option value="RASS1">RASS1</option>
-                <option value="RASS2">RASS2</option>
-                <option value="RASS5">RASS5</option>
-                <option value="RIYADH.KHABRA.MOR">RIYADH.KHABRA.MOR</option>
-                <option value="UNIZAH1">UNIZAH1</option>
-                <option value="UNIZAH2">UNIZAH2</option>
-                <option value="UNIZAH3">UNIZAH3</option>
-                <option value="UNIZAH4">UNIZAH4</option>
-                <option value="UNIZAH5">UNIZAH5</option>
-            </select>
-        </div>
-        
-        <div id="mainContent" style="display: none;">
         <div class="tabs">
             <button class="tab active" onclick="showPage('patients')">📋 Patients</button>
             <button class="tab" onclick="showPage('tracking')">📊 Tracking</button>
@@ -328,42 +302,23 @@
                 </div>
             </div>
         </div>
-        </div>
     </div>
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbyLnOK9PXLM7Z6_ERgT84nul50S62juQ7h8AYywUUJ0eUUn1GaG_0LOjkY7HLw9S7wYkQ/exec';
 let patients = [];
 let editId = null;
-let currentPharmacy = '';
-
-// Check if pharmacy was previously selected
-const savedPharmacy = localStorage.getItem('selectedPharmacy');
-if (savedPharmacy) {
-    document.getElementById('pharmacySelect').value = savedPharmacy;
-    changePharmacy();
-}
-
-function changePharmacy() {
-    currentPharmacy = document.getElementById('pharmacySelect').value;
-    if (!currentPharmacy) {
-        document.getElementById('mainContent').style.display = 'none';
-        return;
-    }
-    localStorage.setItem('selectedPharmacy', currentPharmacy);
-    document.getElementById('mainContent').style.display = 'block';
-    loadData();
-}
 
 document.getElementById('reportMonth').value = new Date().getMonth();
 document.getElementById('reportYear').value = new Date().getFullYear();
 document.getElementById('date').valueAsDate = new Date();
 
-// Set compare defaults
 document.getElementById('beforeMonth').value = new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1;
 document.getElementById('beforeYear').value = new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear();
 document.getElementById('afterMonth').value = new Date().getMonth();
 document.getElementById('afterYear').value = new Date().getFullYear();
+
+loadData();
 
 function showPage(p) {
     document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
@@ -376,10 +331,9 @@ function showPage(p) {
 }
 
 async function loadData() {
-    if (!currentPharmacy) return;
     document.getElementById('patientsTbody').innerHTML = '<tr><td colspan="5"><div class="empty">Loading...</div></td></tr>';
     try {
-        const res = await fetch(API + '?action=get&pharmacy=' + encodeURIComponent(currentPharmacy));
+        const res = await fetch(API + '?action=get');
         const data = await res.json();
         patients = data.map(p => ({
             id: String(p.id || ''),
@@ -398,7 +352,7 @@ async function loadData() {
         renderPatients();
     } catch (e) {
         syncStatus(false);
-        patients = JSON.parse(localStorage.getItem('patients_' + currentPharmacy)) || [];
+        patients = JSON.parse(localStorage.getItem('patients')) || [];
         renderPatients();
     }
 }
@@ -440,15 +394,15 @@ document.getElementById('form').onsubmit = async function(e) {
     }
     
     try {
-        await fetch(API + '?action=' + (editId ? 'update' : 'add') + '&pharmacy=' + encodeURIComponent(currentPharmacy) + '&data=' + encodeURIComponent(JSON.stringify(p)));
+        await fetch(API + '?action=' + (editId ? 'update' : 'add') + '&data=' + encodeURIComponent(JSON.stringify(p)));
         if (editId) patients[patients.findIndex(x => x.id === editId)] = p;
         else patients.push(p);
-        localStorage.setItem('patients_' + currentPharmacy, JSON.stringify(patients));
+        localStorage.setItem('patients', JSON.stringify(patients));
         syncStatus(true);
     } catch (e) {
         if (editId) patients[patients.findIndex(x => x.id === editId)] = p;
         else patients.push(p);
-        localStorage.setItem('patients_' + currentPharmacy, JSON.stringify(patients));
+        localStorage.setItem('patients', JSON.stringify(patients));
         syncStatus(false);
     }
     
@@ -481,9 +435,9 @@ function editP(id) {
 
 async function delP(id) {
     if (confirm('Delete this patient?')) {
-        try { await fetch(API + '?action=delete&pharmacy=' + encodeURIComponent(currentPharmacy) + '&id=' + id); } catch (e) {}
+        try { await fetch(API + '?action=delete&id=' + id); } catch (e) {}
         patients = patients.filter(x => x.id !== id);
-        localStorage.setItem('patients_' + currentPharmacy, JSON.stringify(patients));
+        localStorage.setItem('patients', JSON.stringify(patients));
         renderPatients();
     }
 }
@@ -515,8 +469,8 @@ https://shorturl.at/M2Cq3
 }
 
 async function saveP(p) {
-    try { await fetch(API + '?action=update&pharmacy=' + encodeURIComponent(currentPharmacy) + '&data=' + encodeURIComponent(JSON.stringify(p))); } catch (e) {}
-    localStorage.setItem('patients_' + currentPharmacy, JSON.stringify(patients));
+    try { await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p))); } catch (e) {}
+    localStorage.setItem('patients', JSON.stringify(patients));
     renderPatients(); renderTracking();
 }
 
@@ -641,8 +595,6 @@ function genReport() {
         : '<tr><td colspan="5"><div class="empty">No conversions this month</div></td></tr>';
 }
 
-function download(c, n, t) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], {type: t+';charset=utf-8'})); a.download = n; a.click(); }
-
 let comparisons = JSON.parse(localStorage.getItem('comparisons')) || [];
 
 function genCompare() {
@@ -669,7 +621,6 @@ function addComparison() {
     
     if (!medName) { alert('Please enter medication name'); return; }
     
-    // Check if already exists
     const existing = comparisons.findIndex(c => c.med.toLowerCase() === medName.toLowerCase());
     if (existing >= 0) {
         comparisons[existing].before = beforeSales;
@@ -701,14 +652,12 @@ function renderComparisons() {
     const am = parseInt(document.getElementById('afterMonth').value);
     const ay = parseInt(document.getElementById('afterYear').value);
     
-    // Get converted data for after month
     const afterData = patients.filter(p => {
         if (p.converted !== 'yes') return false;
         const cd = new Date(p.convertedDate);
         return cd.getMonth() === am && cd.getFullYear() === ay;
     });
     
-    // Count medications
     const afterMeds = {};
     afterData.forEach(p => {
         const med = p.med.trim().toLowerCase();
@@ -754,7 +703,6 @@ function renderComparisons() {
         </tr>`;
     }).join('');
     
-    // Summary
     document.getElementById('summaryCard').style.display = 'block';
     document.getElementById('totalBefore').textContent = totalBefore;
     document.getElementById('totalAfter').textContent = totalAfter;
