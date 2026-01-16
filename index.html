@@ -35,6 +35,29 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
         @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header-container h1 { font-size: 20px; }
+            .logo-img { height: 70px; }
+            .tabs { gap: 5px; }
+            .tab { padding: 10px 15px; font-size: 13px; }
+            .card { padding: 15px; }
+            .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat { padding: 15px; }
+            .stat-num { font-size: 24px; }
+            .stat-label { font-size: 11px; }
+            table { font-size: 13px; }
+            th, td { padding: 10px 8px; }
+            .actions { gap: 5px; }
+            .actions button { width: 32px; height: 32px; font-size: 14px; }
+            .badge { padding: 4px 8px; font-size: 10px; }
+            .report-grid { grid-template-columns: 1fr; }
+            .report-value { font-size: 36px; }
+            .track-grid { grid-template-columns: 1fr; }
+            .btn { padding: 10px 15px; }
+            .header-row { flex-direction: column; align-items: flex-start; }
+            input, select { padding: 10px; font-size: 16px; }
+        }
         .card { background: #fff; border-radius: 16px; padding: 25px; border: none; margin-bottom: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.07); }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; font-weight: 600; }
@@ -226,7 +249,7 @@
     </div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbyLnOK9PXLM7Z6_ERgT84nul50S62juQ7h8AYywUUJ0eUUn1GaG_0LOjkY7HLw9S7wYkQ/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxttAQK6oEqdmqekXHto2_tBIkTVAmcwNA8rrHQkEcabwVayNwPSIc19zp68D9UG22POw/exec';
 let patients = [];
 let editId = null;
 
