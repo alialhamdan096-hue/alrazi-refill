@@ -94,12 +94,39 @@
 </head>
 <body>
     <div class="container">
-        <h1>Alrazi Refill Cash Patients System</h1>
+        <h1>Alrazi Pharmacy Group System</h1>
         
+        <div class="card" style="margin-bottom: 20px; text-align: center;">
+            <label style="font-size: 16px; margin-right: 10px;">Select Pharmacy:</label>
+            <select id="pharmacySelect" onchange="changePharmacy()" style="width: auto; min-width: 200px; font-size: 16px; padding: 10px;">
+                <option value="">-- Select Pharmacy --</option>
+                <option value="BADAYA1">BADAYA1</option>
+                <option value="BADAYA2">BADAYA2</option>
+                <option value="BUKAYRIAH1">BUKAYRIAH1</option>
+                <option value="BUKAYRIAH2">BUKAYRIAH2</option>
+                <option value="BUKAYRIAH.MOR">BUKAYRIAH.MOR</option>
+                <option value="BURIDAH1">BURIDAH1</option>
+                <option value="BURIDAH2">BURIDAH2</option>
+                <option value="KHABRA1">KHABRA1</option>
+                <option value="MITHNAB1">MITHNAB1</option>
+                <option value="RASS1">RASS1</option>
+                <option value="RASS2">RASS2</option>
+                <option value="RASS5">RASS5</option>
+                <option value="RIYADH.KHABRA.MOR">RIYADH.KHABRA.MOR</option>
+                <option value="UNIZAH1">UNIZAH1</option>
+                <option value="UNIZAH2">UNIZAH2</option>
+                <option value="UNIZAH3">UNIZAH3</option>
+                <option value="UNIZAH4">UNIZAH4</option>
+                <option value="UNIZAH5">UNIZAH5</option>
+            </select>
+        </div>
+        
+        <div id="mainContent" style="display: none;">
         <div class="tabs">
             <button class="tab active" onclick="showPage('patients')">📋 Patients</button>
             <button class="tab" onclick="showPage('tracking')">📊 Tracking</button>
             <button class="tab" onclick="showPage('reports')">📈 Reports</button>
+            <button class="tab" onclick="showPage('compare')">⚖️ Compare</button>
         </div>
         
         <div id="sync" class="sync sync-ok">✓ Connected to Google Sheets</div>
@@ -218,18 +245,125 @@
                 </table>
             </div>
         </div>
+
+        <!-- COMPARE PAGE -->
+        <div id="comparePage" class="page">
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">⚖️ Service Impact - Before vs After</h3>
+                <p style="color: #6c757d; margin-bottom: 20px;">Compare medication sales before the reminder service (manual entry from Juleeb) with after the service (from Converted data)</p>
+                
+                <div class="row" style="margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>Before Service Month</label>
+                        <div class="row">
+                            <select id="beforeMonth">
+                                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                                <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+                            </select>
+                            <select id="beforeYear">
+                                <option value="2025">2025</option><option value="2026">2026</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>After Service Month</label>
+                        <div class="row">
+                            <select id="afterMonth" onchange="updateAfterData()">
+                                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                                <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+                            </select>
+                            <select id="afterYear" onchange="updateAfterData()">
+                                <option value="2026">2026</option><option value="2027">2027</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 15px;">➕ Add Medication for Comparison</h4>
+                <div class="row" style="margin-bottom: 15px;">
+                    <input type="text" id="compMedName" placeholder="Medication name (e.g. Glucophage 500mg)">
+                    <input type="number" id="compBeforeSales" placeholder="Sales before service">
+                </div>
+                <button class="btn btn-primary" onclick="addComparison()" style="width: auto; margin: 0;">Add to Comparison</button>
+            </div>
+
+            <div class="card">
+                <div class="header-row">
+                    <h3>📊 Comparison Results</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="clearComparisons()">Clear All</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Medication</th>
+                            <th id="thBefore">Before Service</th>
+                            <th id="thAfter">After Service (Converted)</th>
+                            <th>Difference</th>
+                            <th>Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compareBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card" id="summaryCard" style="display: none;">
+                <h3 style="margin-bottom: 20px;">📈 Overall Impact Summary</h3>
+                <div class="report-grid">
+                    <div class="report-card">
+                        <div class="report-value" id="totalBefore">0</div>
+                        <div class="report-label">Total Before</div>
+                    </div>
+                    <div class="report-card">
+                        <div class="report-value" style="color: #10b981;" id="totalAfter">0</div>
+                        <div class="report-label">Total After</div>
+                    </div>
+                    <div class="report-card">
+                        <div class="report-value" style="color: #3b82f6;" id="totalImpact">0%</div>
+                        <div class="report-label">Overall Change</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
     </div>
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbyLnOK9PXLM7Z6_ERgT84nul50S62juQ7h8AYywUUJ0eUUn1GaG_0LOjkY7HLw9S7wYkQ/exec';
 let patients = [];
 let editId = null;
+let currentPharmacy = '';
+
+// Check if pharmacy was previously selected
+const savedPharmacy = localStorage.getItem('selectedPharmacy');
+if (savedPharmacy) {
+    document.getElementById('pharmacySelect').value = savedPharmacy;
+    changePharmacy();
+}
+
+function changePharmacy() {
+    currentPharmacy = document.getElementById('pharmacySelect').value;
+    if (!currentPharmacy) {
+        document.getElementById('mainContent').style.display = 'none';
+        return;
+    }
+    localStorage.setItem('selectedPharmacy', currentPharmacy);
+    document.getElementById('mainContent').style.display = 'block';
+    loadData();
+}
 
 document.getElementById('reportMonth').value = new Date().getMonth();
 document.getElementById('reportYear').value = new Date().getFullYear();
 document.getElementById('date').valueAsDate = new Date();
 
-loadData();
+// Set compare defaults
+document.getElementById('beforeMonth').value = new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1;
+document.getElementById('beforeYear').value = new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear();
+document.getElementById('afterMonth').value = new Date().getMonth();
+document.getElementById('afterYear').value = new Date().getFullYear();
 
 function showPage(p) {
     document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
@@ -238,12 +372,14 @@ function showPage(p) {
     event.target.classList.add('active');
     if (p === 'tracking') renderTracking();
     if (p === 'reports') genReport();
+    if (p === 'compare') genCompare();
 }
 
 async function loadData() {
+    if (!currentPharmacy) return;
     document.getElementById('patientsTbody').innerHTML = '<tr><td colspan="5"><div class="empty">Loading...</div></td></tr>';
     try {
-        const res = await fetch(API + '?action=get');
+        const res = await fetch(API + '?action=get&pharmacy=' + encodeURIComponent(currentPharmacy));
         const data = await res.json();
         patients = data.map(p => ({
             id: String(p.id || ''),
@@ -262,7 +398,7 @@ async function loadData() {
         renderPatients();
     } catch (e) {
         syncStatus(false);
-        patients = JSON.parse(localStorage.getItem('patients')) || [];
+        patients = JSON.parse(localStorage.getItem('patients_' + currentPharmacy)) || [];
         renderPatients();
     }
 }
@@ -304,15 +440,15 @@ document.getElementById('form').onsubmit = async function(e) {
     }
     
     try {
-        await fetch(API + '?action=' + (editId ? 'update' : 'add') + '&data=' + encodeURIComponent(JSON.stringify(p)));
+        await fetch(API + '?action=' + (editId ? 'update' : 'add') + '&pharmacy=' + encodeURIComponent(currentPharmacy) + '&data=' + encodeURIComponent(JSON.stringify(p)));
         if (editId) patients[patients.findIndex(x => x.id === editId)] = p;
         else patients.push(p);
-        localStorage.setItem('patients', JSON.stringify(patients));
+        localStorage.setItem('patients_' + currentPharmacy, JSON.stringify(patients));
         syncStatus(true);
     } catch (e) {
         if (editId) patients[patients.findIndex(x => x.id === editId)] = p;
         else patients.push(p);
-        localStorage.setItem('patients', JSON.stringify(patients));
+        localStorage.setItem('patients_' + currentPharmacy, JSON.stringify(patients));
         syncStatus(false);
     }
     
@@ -345,9 +481,9 @@ function editP(id) {
 
 async function delP(id) {
     if (confirm('Delete this patient?')) {
-        try { await fetch(API + '?action=delete&id=' + id); } catch (e) {}
+        try { await fetch(API + '?action=delete&pharmacy=' + encodeURIComponent(currentPharmacy) + '&id=' + id); } catch (e) {}
         patients = patients.filter(x => x.id !== id);
-        localStorage.setItem('patients', JSON.stringify(patients));
+        localStorage.setItem('patients_' + currentPharmacy, JSON.stringify(patients));
         renderPatients();
     }
 }
@@ -379,8 +515,8 @@ https://shorturl.at/M2Cq3
 }
 
 async function saveP(p) {
-    try { await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p))); } catch (e) {}
-    localStorage.setItem('patients', JSON.stringify(patients));
+    try { await fetch(API + '?action=update&pharmacy=' + encodeURIComponent(currentPharmacy) + '&data=' + encodeURIComponent(JSON.stringify(p))); } catch (e) {}
+    localStorage.setItem('patients_' + currentPharmacy, JSON.stringify(patients));
     renderPatients(); renderTracking();
 }
 
@@ -506,6 +642,134 @@ function genReport() {
 }
 
 function download(c, n, t) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], {type: t+';charset=utf-8'})); a.download = n; a.click(); }
+
+let comparisons = JSON.parse(localStorage.getItem('comparisons')) || [];
+
+function genCompare() {
+    updateAfterData();
+    renderComparisons();
+}
+
+function updateAfterData() {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const bm = document.getElementById('beforeMonth').value;
+    const by = document.getElementById('beforeYear').value;
+    const am = document.getElementById('afterMonth').value;
+    const ay = document.getElementById('afterYear').value;
+    
+    document.getElementById('thBefore').textContent = 'Before (' + months[bm] + ' ' + by + ')';
+    document.getElementById('thAfter').textContent = 'After (' + months[am] + ' ' + ay + ')';
+    
+    renderComparisons();
+}
+
+function addComparison() {
+    const medName = document.getElementById('compMedName').value.trim();
+    const beforeSales = parseInt(document.getElementById('compBeforeSales').value) || 0;
+    
+    if (!medName) { alert('Please enter medication name'); return; }
+    
+    // Check if already exists
+    const existing = comparisons.findIndex(c => c.med.toLowerCase() === medName.toLowerCase());
+    if (existing >= 0) {
+        comparisons[existing].before = beforeSales;
+    } else {
+        comparisons.push({ med: medName, before: beforeSales });
+    }
+    
+    localStorage.setItem('comparisons', JSON.stringify(comparisons));
+    document.getElementById('compMedName').value = '';
+    document.getElementById('compBeforeSales').value = '';
+    renderComparisons();
+}
+
+function removeComparison(index) {
+    comparisons.splice(index, 1);
+    localStorage.setItem('comparisons', JSON.stringify(comparisons));
+    renderComparisons();
+}
+
+function clearComparisons() {
+    if (confirm('Clear all comparisons?')) {
+        comparisons = [];
+        localStorage.setItem('comparisons', JSON.stringify(comparisons));
+        renderComparisons();
+    }
+}
+
+function renderComparisons() {
+    const am = parseInt(document.getElementById('afterMonth').value);
+    const ay = parseInt(document.getElementById('afterYear').value);
+    
+    // Get converted data for after month
+    const afterData = patients.filter(p => {
+        if (p.converted !== 'yes') return false;
+        const cd = new Date(p.convertedDate);
+        return cd.getMonth() === am && cd.getFullYear() === ay;
+    });
+    
+    // Count medications
+    const afterMeds = {};
+    afterData.forEach(p => {
+        const med = p.med.trim().toLowerCase();
+        afterMeds[med] = (afterMeds[med] || 0) + 1;
+    });
+    
+    const tbody = document.getElementById('compareBody');
+    
+    if (comparisons.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty">Add medications to compare</div></td></tr>';
+        document.getElementById('summaryCard').style.display = 'none';
+        return;
+    }
+    
+    let totalBefore = 0;
+    let totalAfter = 0;
+    
+    tbody.innerHTML = comparisons.map((c, i) => {
+        const before = c.before;
+        const after = afterMeds[c.med.toLowerCase()] || 0;
+        const diff = after - before;
+        const pct = before > 0 ? Math.round((diff / before) * 100) : (after > 0 ? 100 : 0);
+        
+        totalBefore += before;
+        totalAfter += after;
+        
+        let impact = '';
+        if (diff > 0) impact = `<span style="color: #10b981;">+${pct}% ⬆️</span>`;
+        else if (diff < 0) impact = `<span style="color: #ef4444;">${pct}% ⬇️</span>`;
+        else impact = `<span style="color: #6b7280;">0% ➡️</span>`;
+        
+        let diffText = '';
+        if (diff > 0) diffText = `<span style="color: #10b981;">+${diff}</span>`;
+        else if (diff < 0) diffText = `<span style="color: #ef4444;">${diff}</span>`;
+        else diffText = `<span style="color: #6b7280;">0</span>`;
+        
+        return `<tr>
+            <td class="med">${c.med} <button onclick="removeComparison(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button></td>
+            <td>${before}</td>
+            <td>${after}</td>
+            <td>${diffText}</td>
+            <td>${impact}</td>
+        </tr>`;
+    }).join('');
+    
+    // Summary
+    document.getElementById('summaryCard').style.display = 'block';
+    document.getElementById('totalBefore').textContent = totalBefore;
+    document.getElementById('totalAfter').textContent = totalAfter;
+    
+    const totalDiff = totalAfter - totalBefore;
+    const totalPct = totalBefore > 0 ? Math.round((totalDiff / totalBefore) * 100) : (totalAfter > 0 ? 100 : 0);
+    
+    if (totalDiff > 0) {
+        document.getElementById('totalImpact').innerHTML = `<span style="color: #10b981;">+${totalPct}% ⬆️</span>`;
+    } else if (totalDiff < 0) {
+        document.getElementById('totalImpact').innerHTML = `<span style="color: #ef4444;">${totalPct}% ⬇️</span>`;
+    } else {
+        document.getElementById('totalImpact').innerHTML = `<span style="color: #6b7280;">0% ➡️</span>`;
+    }
+}
 </script>
 </body>
 </html>
