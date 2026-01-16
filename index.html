@@ -225,7 +225,8 @@ let editId = null;
 
 document.getElementById('reportMonth').value = new Date().getMonth();
 document.getElementById('reportYear').value = new Date().getFullYear();
-document.getElementById('date').valueAsDate = new Date();
+// تهيئة التاريخ الابتدائي
+document.getElementById('date').value = getTodayString();
 
 loadData();
 
@@ -236,6 +237,15 @@ function showPage(p) {
     event.target.classList.add('active');
     if (p === 'tracking') renderTracking();
     if (p === 'reports') genReport();
+}
+
+// دالة مساعدة للحصول على تاريخ اليوم كنص ثابت (لتجنب مشاكل التوقيت)
+function getTodayString() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 async function loadData() {
@@ -265,10 +275,14 @@ async function loadData() {
     }
 }
 
+// دالة تنسيق التاريخ ليكون نصاً فقط بدون وقت
 function fmtDate(v) {
     if (!v) return '';
-    const d = new Date(v);
-    return isNaN(d) ? v : d.toISOString().split('T')[0];
+    // إذا كان التاريخ نصاً بالفعل، أرجعه كما هو (الجزء الأول فقط قبل حرف T)
+    if (typeof v === 'string') {
+        return v.split('T')[0];
+    }
+    return v; // في حال كان شيئاً آخر
 }
 
 function syncStatus(ok) {
@@ -320,7 +334,7 @@ function resetForm() {
     editId = null;
     document.getElementById('form').reset();
     document.getElementById('days').value = '30';
-    document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('date').value = getTodayString(); // استخدام النص الثابت
     document.getElementById('formTitle').textContent = 'Add Patient';
     document.getElementById('submitBtn').textContent = 'Add Patient';
 }
@@ -331,7 +345,7 @@ function editP(id) {
     document.getElementById('name').value = p.name;
     document.getElementById('phone').value = p.phone;
     document.getElementById('med').value = p.med;
-    document.getElementById('date').value = p.date;
+    document.getElementById('date').value = p.date; // التاريخ نصي هنا لذا لا مشكلة
     document.getElementById('days').value = p.days;
     document.getElementById('notes').value = p.notes || '';
     document.getElementById('formTitle').textContent = 'Edit Patient';
@@ -369,7 +383,7 @@ https://shorturl.at/M2Cq3
 نتمنى لكم دوام الصحة والعافية`;
     window.open('https://wa.me/' + p.phone + '?text=' + encodeURIComponent(msg), '_blank');
     p.reminderSent = 'yes';
-    p.reminderDate = new Date().toISOString().split('T')[0];
+    p.reminderDate = getTodayString(); // استخدام النص الثابت
     saveP(p);
 }
 
@@ -382,12 +396,12 @@ async function saveP(p) {
 async function markConverted(id) {
     const p = patients.find(x => x.id === id);
     p.converted = 'yes';
-    p.convertedDate = new Date().toISOString().split('T')[0];
+    p.convertedDate = getTodayString(); // استخدام النص الثابت
     await saveP(p);
 }
 
 function getRefill(p) {
-    const d = new Date(p.date);
+    const d = new Date(p.date); // هنا فقط نحول النص لوقت للحسابات
     d.setDate(d.getDate() + parseInt(p.days));
     return d;
 }
@@ -439,60 +453,4 @@ function renderTracking() {
     let list = patients.filter(p => p.reminderSent === 'yes');
     if (filter === 'waiting') list = list.filter(p => p.converted !== 'yes');
     else if (filter === 'converted') list = list.filter(p => p.converted === 'yes');
-    list.sort((a,b) => new Date(b.reminderDate) - new Date(a.reminderDate));
-    
-    const sent = patients.filter(p => p.reminderSent === 'yes').length;
-    const conv = patients.filter(p => p.converted === 'yes').length;
-    document.getElementById('tSent').textContent = sent;
-    document.getElementById('tConverted').textContent = conv;
-    document.getElementById('tRate').textContent = sent > 0 ? Math.round(conv/sent*100) + '%' : '0%';
-    
-    const grid = document.getElementById('trackGrid');
-    if (list.length === 0) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1;">No records found</div>'; return; }
-    
-    grid.innerHTML = list.map(p => `
-        <div class="track-card ${p.converted === 'yes' ? 'converted' : ''}">
-            <div class="name">${p.name}</div>
-            <div class="phone">${p.phone}</div>
-            <div class="med">${p.med}</div>
-            <div class="info">📤 Sent: ${p.reminderDate}${p.converted === 'yes' ? '<br>✅ Converted: ' + p.convertedDate : ''}</div>
-            ${p.converted === 'yes' 
-              ? `<button class="track-btn done" disabled style="cursor: default; opacity: 0.7;">✅ Completed</button>` 
-              : `<button class="track-btn" onclick="markConverted('${p.id}')">✅ Mark as Converted</button>`}
-        </div>
-    `).join('');
-}
-
-function genReport() {
-    const m = parseInt(document.getElementById('reportMonth').value);
-    const y = parseInt(document.getElementById('reportYear').value);
-    
-    const mp = patients.filter(p => {
-        if (p.reminderSent !== 'yes') return false;
-        const rd = new Date(p.reminderDate);
-        return rd.getMonth() === m && rd.getFullYear() === y;
-    });
-    
-    const sent = mp.length;
-    const conv = mp.filter(p => p.converted === 'yes').length;
-    const rate = sent > 0 ? Math.round(conv/sent*100) : 0;
-    
-    document.getElementById('rSent').textContent = sent;
-    document.getElementById('rConverted').textContent = conv;
-    document.getElementById('rRate').textContent = rate + '%';
-    document.getElementById('rBar').style.width = rate + '%';
-    
-    document.getElementById('summaryTb').innerHTML = `
-        <tr><td>📤 Reminders Sent</td><td>${sent}</td><td>100%</td></tr>
-        <tr><td>✅ Converted</td><td>${conv}</td><td>${rate}%</td></tr>
-        <tr><td>⏳ Waiting</td><td>${sent - conv}</td><td>${sent > 0 ? Math.round((sent-conv)/sent*100) : 0}%</td></tr>
-    `;
-    
-    const convP = mp.filter(p => p.converted === 'yes');
-    document.getElementById('convList').innerHTML = convP.length > 0 
-        ? convP.map(p => `<tr><td class="name">${p.name}</td><td class="phone">${p.phone}</td><td class="med">${p.med}</td><td>${p.reminderDate}</td><td>${p.convertedDate}</td></tr>`).join('')
-        : '<tr><td colspan="5"><div class="empty">No conversions this month</div></td></tr>';
-}
-</script>
-</body>
-</html>
+    list.sort((a,b) => new Date(b
