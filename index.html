@@ -65,7 +65,13 @@
         .track-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
         .track-card { background: white; border: 1px solid #dee2e6; border-radius: 12px; padding: 20px; }
         .track-card.converted { border-color: #10b981; background: rgba(16,185,129,0.05); }
-        .track-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: rgba(16,185,129,0.15); color: #10b981; margin-top: 10px; }
+        
+        .track-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: rgba(16,185,129,0.15); color: #10b981; margin-top: 10px; transition: 0.2s; }
+        .track-btn:hover { background: rgba(16,185,129,0.25); }
+        
+        /* تصميم زر التراجع */
+        .track-btn.undo { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+        .track-btn.undo:hover { background: #e5e7eb; color: #374151; }
         
         .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .report-card { background: #f8f9fa; border-radius: 12px; padding: 25px; border: 1px solid #dee2e6; text-align: center; }
@@ -140,22 +146,12 @@ const API = 'https://script.google.com/macros/s/AKfycbyLnOK9PXLM7Z6_ERgT84nul50S
 let patients = [];
 let editId = null;
 
-// الحل النهائي: دالة تجبر التاريخ على البقاء كما هو في تقويم جهازك
+// دالة التاريخ الثابتة (لا تعدلها)
 function fmtDate(v) {
     if (!v) return '';
-    
-    // إذا كان التاريخ نص (جاي من جوجل أو قاعدة البيانات)
-    if (typeof v === 'string') {
-        // نأخذ الجزء الأول فقط (السنة-الشهر-اليوم) ونتجاهل الوقت
-        return v.split('T')[0];
-    }
-    
-    // إذا كان كائن تاريخ (تونا مسوينه)
+    if (typeof v === 'string') return v.split('T')[0];
     const d = new Date(v);
     if (isNaN(d)) return '';
-    
-    // الحل السحري: تنسيق كندي يطابق شكل التقويم (YYYY-MM-DD)
-    // ويستخدم توقيتك المحلي، فيضمن عدم تغير اليوم
     return d.toLocaleDateString('en-CA');
 }
 
@@ -169,7 +165,6 @@ async function loadData() {
         patients = data.map(p => ({
             ...p,
             id: String(p.id),
-            // نمرر التاريخ للدالة الجديدة لضمان عرضه بشكل صحيح
             date: fmtDate(p.date),
             reminderDate: fmtDate(p.reminderDate),
             convertedDate: fmtDate(p.convertedDate)
@@ -198,7 +193,6 @@ document.getElementById('form').onsubmit = async function(e) {
         name: document.getElementById('name').value,
         phone: document.getElementById('phone').value.replace(/\D/g, ''),
         med: document.getElementById('med').value,
-        // القيمة هنا تأتي من التقويم مباشرة كنص ثابت (2026-01-16)
         date: document.getElementById('date').value, 
         days: document.getElementById('days').value,
         notes: document.getElementById('notes').value,
@@ -229,7 +223,6 @@ function editP(id) {
     document.getElementById('name').value = p.name;
     document.getElementById('phone').value = p.phone;
     document.getElementById('med').value = p.med;
-    // هنا يتم وضع التاريخ في الخانة كما هو محفوظ تماماً
     document.getElementById('date').value = p.date;
     document.getElementById('days').value = p.days;
     document.getElementById('notes').value = p.notes || '';
@@ -295,6 +288,16 @@ async function markConverted(id) {
     renderTracking();
 }
 
+// دالة التراجع الجديدة
+async function undoConverted(id) {
+    if(!confirm("Are you sure you want to undo?")) return;
+    const p = patients.find(x => x.id === id);
+    p.converted = 'no';
+    p.convertedDate = '';
+    await fetch(API + '?action=update&data=' + encodeURIComponent(JSON.stringify(p)));
+    renderTracking();
+}
+
 function renderTracking() {
     const grid = document.getElementById('trackGrid');
     const list = patients.filter(p => p.reminderSent === 'yes');
@@ -302,7 +305,11 @@ function renderTracking() {
         <div class="track-card ${p.converted === 'yes' ? 'converted' : ''}">
             <div>${p.name}</div>
             <div class="phone">Sent: ${p.reminderDate}</div>
-            ${p.converted === 'yes' ? '✅ Converted' : `<button class="track-btn" onclick="markConverted('${p.id}')">Mark Converted</button>`}
+            ${p.converted === 'yes' 
+                ? `<div style="margin-top:10px; color:#10b981; font-weight:bold;">✅ Converted</div>
+                   <button class="track-btn undo" onclick="undoConverted('${p.id}')">↩️ Undo</button>`
+                : `<button class="track-btn" onclick="markConverted('${p.id}')">✅ Mark Converted</button>`
+            }
         </div>
     `).join('');
 }
