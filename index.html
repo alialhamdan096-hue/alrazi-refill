@@ -151,7 +151,8 @@
         </div>
     </div>
 <script>
-const CONFIG={API_URL:'https://script.google.com/macros/s/AKfycbykcl1v2TEURnPasMiMbJFCmnC6MgGfhHCAGmwOM6vu_sxpt7CdFM6NcDCRDxrGPVlo/exec',ITEMS_PER_PAGE:10,SEARCH_DELAY:300,TOAST_DURATION:3000,PHONE_REGEX:/^(966|0)?5\d{8}$/,MONTHS:['January','February','March','April','May','June','July','August','September','October','November','December']};
+// ✅ الرابط الجديد الصحيح
+const CONFIG={API_URL:'https://script.google.com/macros/s/AKfycbyBObxRMNaC8unihJJTi4NBZIfx1CzHT1hp2k6Sqzr3gAybZjM_F4M-3Z9459q6_ycoyw/exec',ITEMS_PER_PAGE:10,SEARCH_DELAY:300,TOAST_DURATION:3000,PHONE_REGEX:/^(966|0)?5\d{8}$/,MONTHS:['January','February','March','April','May','June','July','August','September','October','November','December']};
 const State={patients:[],editId:null,currentPage:1,searchQuery:'',statusFilter:'all',searchTimeout:null};
 const Utils={
     formatDate(v){if(!v)return'';if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v))return v;const d=new Date(v);if(isNaN(d))return v;return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')},
@@ -177,6 +178,7 @@ const UI={
 const API={
     async request(a,d=null){
         try{
+            // تم التعديل إلى POST
             let options = {
                 method: 'POST',
                 body: JSON.stringify({ action: a, data: d })
