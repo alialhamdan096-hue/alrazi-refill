@@ -75,7 +75,6 @@
     .stat.total::after{background:var(--primary)}
     .stat.w::after{background:#f59e0b}
     .stat.d::after{background:#ef4444}
-    .stat.s::after{background:var(--accent)}
     .stat.orders::after{background:var(--info)}
     
     /* Sync */
@@ -109,7 +108,9 @@
     input.error{border-color:var(--danger);background:#fef2f2}
     .error-message{color:var(--danger);font-size:11px;margin-top:3px;display:none}
     .error-message.show{display:block}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    
+    /* ✅ إصلاح تداخل Date و Duration - عمودي للموبايل */
+    .row{display:flex;flex-direction:column;gap:12px}
     
     /* Buttons */
     .btn{padding:14px 20px;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:15px;font-weight:bold;width:100%;margin-top:8px;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;gap:8px}
@@ -229,6 +230,9 @@
         .name{font-size:14px}
         .med{font-size:13px}
         .actions button{width:34px;height:34px}
+        /* ✅ للديسكتوب - صف أفقي */
+        .row{flex-direction:row;gap:10px}
+        .row .form-group{flex:1}
     }
     
     /* Toast Mobile */
@@ -266,7 +270,12 @@
                         <div class="form-group"><label>Customer Name (Optional)</label><input type="text" id="name" placeholder="Enter name"></div>
                         <div class="form-group"><label>Phone <span class="required">*</span></label><input type="tel" id="phone" placeholder="966512345678"><div class="error-message" id="phoneError">Please enter a valid phone</div></div>
                         <div class="form-group"><label>Medication <span class="required">*</span></label><input type="text" id="med" placeholder="Medication name"><div class="error-message" id="medError">Please enter medication</div></div>
-                        <div id="refillFields"><div class="row"><div class="form-group"><label>Dispense Date <span class="required">*</span></label><input type="date" id="date"><div class="error-message" id="dateError">Please select date</div></div><div class="form-group"><label>Duration (days) <span class="required">*</span></label><input type="number" id="days" value="30" min="1" max="365"><div class="error-message" id="daysError">Enter 1-365</div></div></div></div>
+                        <div id="refillFields">
+                            <div class="row">
+                                <div class="form-group"><label>Dispense Date <span class="required">*</span></label><input type="date" id="date"><div class="error-message" id="dateError">Please select date</div></div>
+                                <div class="form-group"><label>Duration (days) <span class="required">*</span></label><input type="number" id="days" value="30" min="1" max="365"><div class="error-message" id="daysError">Enter 1-365</div></div>
+                            </div>
+                        </div>
                         <div id="orderFields" style="display:none"><div class="form-group"><label>From Branch <span class="required">*</span></label><select id="branch"><option value="">Select branch...</option><option>RASS2</option><option>RASS5</option><option>UNIZAH1</option><option>UNIZAH2</option><option>UNIZAH3</option><option>UNIZAH5</option><option>BADAYA1</option><option>BADAYA2</option><option>BADAYA3</option><option>BADAYA5</option><option>BADAYA.MOR</option><option>BUKAYRIAH1</option><option>BUKAYRIAH2</option><option>BUKAYRIAH.MOR</option><option>BURIDAH1</option><option>BURIDAH2</option><option>KHABRA1</option><option>MITHNAB1</option><option>MITHNAB2</option><option>RIYADH.KHABRA.MOR</option></select><div class="error-message" id="branchError">Please select branch</div></div><div class="form-group"><label>Pickup Date (Optional)</label><select id="pickupDate"><option value="">Not specified</option><option value="today">Today</option><option value="tomorrow">Tomorrow</option><option value="custom">Custom...</option></select></div><div class="form-group" id="customDateGroup" style="display:none"><label>Custom Date</label><input type="date" id="customPickupDate"></div></div>
                         <div class="form-group"><label>Notes</label><input type="text" id="notes" placeholder="Additional notes"></div>
                         <button type="submit" class="btn btn-primary" id="submitBtn"><span>➕</span> Add</button>
@@ -282,7 +291,7 @@
             </div>
         </div>
         <div id="trackingPage" class="page">
-            <div class="stats"><div class="stat total"><div class="stat-num" id="tSent">0</div><div class="stat-label">Sent</div></div><div class="stat s"><div class="stat-num" id="tConverted">0</div><div class="stat-label">Converted</div></div><div class="stat" style="border-left:4px solid var(--primary)"><div class="stat-num" id="tRate">0%</div><div class="stat-label">Rate</div></div></div>
+            <div class="stats"><div class="stat total"><div class="stat-num" id="tSent">0</div><div class="stat-label">Sent</div></div><div class="stat" style="border-left:4px solid var(--accent)"><div class="stat-num" id="tConverted">0</div><div class="stat-label">Converted</div></div><div class="stat" style="border-left:4px solid var(--primary)"><div class="stat-num" id="tRate">0%</div><div class="stat-label">Rate</div></div></div>
             <div class="card"><div class="header-row"><h3 class="card-title" style="margin:0">📊 Track Conversions</h3><select id="trackFilter" style="width:100%"><option value="all">All</option><option value="waiting">⏳ Waiting</option><option value="converted">✅ Converted</option></select></div><div class="track-grid" id="trackGrid"></div></div>
         </div>
         <div id="reportsPage" class="page">
@@ -330,12 +339,16 @@ clearFieldErrors(){[‘phone’,‘med’,‘date’,‘days’,‘branch’].fo
 showAlert(m){document.getElementById(‘alertText’).textContent=m;document.getElementById(‘alertBanner’).classList.remove(‘hidden’)},
 updateOrdersBadge(){const p=State.patients.filter(x=>x.type===‘order’&&x.orderStatus!==‘delivered’).length;const t=document.querySelector(’[data-page=“patients”]’);let b=t.querySelector(’.tab-badge’);if(p>0){if(!b){b=document.createElement(‘span’);b.className=‘tab-badge’;t.appendChild(b)}b.textContent=p}else if(b)b.remove()}
 };
+
+// ✅ API مع POST
 const API={
 async request(a,d=null){
 try{
-let url = CONFIG.API_URL + ‘?action=’ + a;
-if(d) url += ‘&data=’ + encodeURIComponent(JSON.stringify(d));
-const r = await fetch(url);
+const options = {
+method: ‘POST’,
+body: JSON.stringify({ action: a, data: d })
+};
+const r = await fetch(CONFIG.API_URL, options);
 UI.setSyncStatus(true);
 return await r.json();
 }catch(e){
@@ -344,9 +357,61 @@ UI.setSyncStatus(false);
 throw e;
 }
 },
-async loadPatients(){UI.setLoading(true,‘Loading…’);try{const d=await this.request(‘get’);State.patients=d.map(p=>({id:String(p.id||’’),type:p.type||‘refill’,name:p.name||’’,phone:String(p.phone||’’),med:p.med||’’,date:Utils.formatDate(p.date),days:String(p.days||‘30’),notes:p.notes||’’,addedDate:Utils.formatDate(p.addedDate)||Utils.formatDate(p.date),branch:p.branch||’’,pickupDate:p.pickupDate||’’,orderStatus:p.orderStatus||‘waiting’,arrivedDate:Utils.formatDate(p.arrivedDate),deliveredDate:Utils.formatDate(p.deliveredDate),reminderSent:p.reminderSent||‘no’,reminderDate:Utils.formatDate(p.reminderDate),converted:p.converted||‘no’,convertedDate:Utils.formatDate(p.convertedDate),history:Utils.parseHistory(p.history)}));localStorage.setItem(‘patients_rass1’,JSON.stringify(State.patients));checkTodayAlerts()}catch(e){State.patients=JSON.parse(localStorage.getItem(‘patients_rass1’))||[];UI.showToast(‘Loaded from cache’,‘warning’)}finally{UI.setLoading(false);renderPatients();UI.updateOrdersBadge()}},
-async savePatient(p,a){const d={…p,history:JSON.stringify(p.history||[])};try{await this.request(a, a===‘delete’ ? {id:p.id} : d);UI.setSyncStatus(true)}catch(e){UI.setSyncStatus(false)}localStorage.setItem(‘patients_rass1’,JSON.stringify(State.patients))}
+async loadPatients(){
+UI.setLoading(true,‘Loading…’);
+try{
+const d = await this.request(‘get’);
+console.log(‘API Response:’, d);
+if(Array.isArray(d)){
+State.patients = d.map(p=>({
+id:String(p.id||’’),
+type:p.type||‘refill’,
+name:p.name||’’,
+phone:String(p.phone||’’),
+med:p.med||’’,
+date:Utils.formatDate(p.date),
+days:String(p.days||‘30’),
+notes:p.notes||’’,
+addedDate:Utils.formatDate(p.addedDate)||Utils.formatDate(p.date),
+branch:p.branch||’’,
+pickupDate:p.pickupDate||’’,
+orderStatus:p.orderStatus||‘waiting’,
+arrivedDate:Utils.formatDate(p.arrivedDate),
+deliveredDate:Utils.formatDate(p.deliveredDate),
+reminderSent:p.reminderSent||‘no’,
+reminderDate:Utils.formatDate(p.reminderDate),
+converted:p.converted||‘no’,
+convertedDate:Utils.formatDate(p.convertedDate),
+history:Utils.parseHistory(p.history)
+}));
+} else {
+console.error(‘Response is not array:’, d);
+throw new Error(‘Invalid response’);
+}
+localStorage.setItem(‘patients_rass1’,JSON.stringify(State.patients));
+checkTodayAlerts();
+}catch(e){
+console.error(‘Load error:’, e);
+State.patients = JSON.parse(localStorage.getItem(‘patients_rass1’))||[];
+UI.showToast(‘Loaded from cache’,‘warning’);
+}finally{
+UI.setLoading(false);
+renderPatients();
+UI.updateOrdersBadge();
+}
+},
+async savePatient(p,a){
+const d = {…p, history: JSON.stringify(p.history||[])};
+try{
+await this.request(a, a===‘delete’ ? {id:p.id} : d);
+UI.setSyncStatus(true);
+}catch(e){
+UI.setSyncStatus(false);
+}
+localStorage.setItem(‘patients_rass1’,JSON.stringify(State.patients));
+}
 };
+
 function setEntryType(t){State.entryType=t;document.getElementById(‘entryType’).value=t;document.querySelectorAll(’.type-btn’).forEach(b=>{b.classList.remove(‘active’);if(b.dataset.type===t)b.classList.add(‘active’)});document.getElementById(‘refillFields’).style.display=t===‘refill’?‘block’:‘none’;document.getElementById(‘orderFields’).style.display=t===‘order’?‘block’:‘none’;document.getElementById(‘submitBtn’).innerHTML=’<span>➕</span> Add ‘+(t===‘refill’?‘Patient’:‘Order’);UI.clearFieldErrors()}
 function handlePickupDateChange(){document.getElementById(‘customDateGroup’).style.display=document.getElementById(‘pickupDate’).value===‘custom’?‘block’:‘none’}
 const Validation={validateForm(){let v=true;UI.clearFieldErrors();const t=State.entryType,p=document.getElementById(‘phone’).value,m=document.getElementById(‘med’).value.trim();if(!Utils.validatePhone(p)){UI.showFieldError(‘phone’,true);v=false}if(!m){UI.showFieldError(‘med’,true);v=false}if(t===‘refill’){if(!document.getElementById(‘date’).value){UI.showFieldError(‘date’,true);v=false}const d=parseInt(document.getElementById(‘days’).value);if(!d||d<1||d>365){UI.showFieldError(‘days’,true);v=false}}else{if(!document.getElementById(‘branch’).value){UI.showFieldError(‘branch’,true);v=false}}return v}};
