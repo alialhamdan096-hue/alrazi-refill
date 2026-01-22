@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -47,6 +46,26 @@
         @media(max-width:900px){.grid{grid-template-columns:1fr}}
         .card{background:var(--white);border-radius:var(--radius-lg);padding:20px;margin-bottom:15px;box-shadow:var(--shadow-lg)}
         .card-title{color:var(--primary);margin-bottom:15px;font-size:16px;font-weight:600}
+        
+        /* NEW STYLES FOR TYPE SELECTOR */
+        .type-selector{display:flex;gap:8px;margin-bottom:15px}
+        .type-btn{flex:1;padding:12px;border:2px solid #e5e5e5;border-radius:var(--radius-md);background:white;cursor:pointer;transition:var(--transition);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .type-btn:hover{border-color:var(--primary)}
+        .type-btn.active{border-color:var(--primary);background:rgba(86,28,44,0.05)}
+        .type-btn.active.order{border-color:var(--info);background:var(--order-bg)}
+        .type-btn-icon{font-size:20px;margin-bottom:2px}
+        .type-btn-label{font-weight:600;color:var(--text-dark);font-size:12px}
+        .type-badge{font-size:14px;margin-right:5px}
+        tr.order-row{background:var(--order-bg)}
+        tr.order-row:hover{background:#e0edff}
+        .badge-delivered{background:rgba(141,198,63,0.15);color:var(--accent-dark)}
+        .badge-waiting{background:rgba(245,158,11,0.15);color:#d97706}
+        .branch-info{color:var(--info);font-size:11px;font-weight:600}
+        .report-tabs{display:flex;gap:5px;margin-bottom:15px;border-bottom:1px solid #eee}
+        .report-tab{padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--gray);border-bottom:3px solid transparent}
+        .report-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+        .report-section{display:none}.report-section.active{display:block}
+        
         .form-group{margin-bottom:12px}
         label{display:block;margin-bottom:4px;color:#555;font-size:13px;font-weight:600}
         label .required{color:var(--danger)}
@@ -86,6 +105,7 @@
         .wa{background:#25D366;color:white}.wa svg{width:18px;height:18px;fill:white}
         .edit{background:rgba(86,28,44,0.1);color:var(--primary)}.del{background:rgba(239,68,68,0.1);color:#ef4444}
         .email-btn{background:rgba(59,130,246,0.15);color:var(--info)}
+        .arrived{background:rgba(59,130,246,0.15);color:var(--info)}.done{background:rgba(141,198,63,0.15);color:var(--accent-dark)}
         .actions button:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
         .empty{text-align:center;padding:40px;color:#aaa;font-style:italic}
         .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
@@ -118,10 +138,7 @@
         .progress{height:8px;background:#eee;border-radius:6px;margin-top:12px;overflow:hidden}
         .progress-bar{height:100%;border-radius:6px;transition:width .5s ease}
         .header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px}
-        /* Checkbox styling */
-        .checkbox-wrapper{display:flex;align-items:center;gap:8px;margin-top:5px}
-        .checkbox-wrapper input[type="checkbox"]{width:18px;height:18px;cursor:pointer}
-        .checkbox-wrapper label{font-size:13px;color:var(--gray);cursor:pointer;margin:0}
+        
         /* Order items list */
         .order-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f9f9f9;border-radius:var(--radius-sm);margin-bottom:8px;gap:10px}
         .order-item-info{flex:1}
@@ -170,14 +187,13 @@
             .row{flex-direction:row;gap:10px}
             .row .form-group{flex:1}
         }
-        @media print{body{background:white}.tabs,.sync,.header-row button,.actions,.pagination,.filters-row select,.alert-banner{display:none!important}.card{box-shadow:none;border:1px solid #ddd}}
+        @media print{body{background:white}.tabs,.sync,.header-row button,.actions,.pagination,.filters-row select,.alert-banner,.type-selector{display:none!important}.card{box-shadow:none;border:1px solid #ddd}}
     </style>
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
     <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
     <div class="modal-overlay" id="confirmModal"><div class="modal"><div class="modal-icon" id="modalIcon">⚠️</div><div class="modal-title" id="modalTitle">Confirm</div><div class="modal-message" id="modalMessage">Are you sure?</div><div class="modal-actions"><button class="modal-cancel" onclick="UI.closeModal()">Cancel</button><button class="modal-confirm" id="modalConfirm">Confirm</button></div></div></div>
-
 
 <div class="container">
     <div class="header-container">
@@ -186,8 +202,8 @@
     </div>
     
     <div class="tabs">
-        <button class="tab active" data-page="patients">💊 Patients</button>
-        <button class="tab" data-page="orders">📦 Orders</button>
+        <button class="tab active" data-page="patients">💊 Records</button>
+        <button class="tab" data-page="orders">📦 Quick Order</button>
         <button class="tab" data-page="tracking">📊 Tracking</button>
         <button class="tab" data-page="reports">📈 Reports</button>
     </div>
@@ -195,26 +211,71 @@
     <div id="sync" class="sync sync-ok">✓ Connected to Google Sheets</div>
     <div class="alert-banner hidden" id="alertBanner"><span class="alert-banner-icon">🔔</span><span class="alert-banner-text" id="alertText"></span><button class="alert-banner-close" onclick="document.getElementById('alertBanner').classList.add('hidden')">×</button></div>
     
-    <!-- ==================== PATIENTS PAGE ==================== -->
     <div id="patientsPage" class="page active">
         <div class="stats">
-            <div class="stat total"><div class="stat-num" id="total">0</div><div class="stat-label">Total</div></div>
+            <div class="stat total"><div class="stat-num" id="total">0</div><div class="stat-label">Records</div></div>
             <div class="stat w"><div class="stat-num" id="warn">0</div><div class="stat-label">Soon</div></div>
             <div class="stat d"><div class="stat-num" id="over">0</div><div class="stat-label">Overdue</div></div>
+            <div class="stat orders"><div class="stat-num" id="pendingOrders">0</div><div class="stat-label">📦 Pending</div></div>
         </div>
         <div class="grid">
             <div class="card">
-                <h3 class="card-title" id="formTitle">➕ Add Patient</h3>
+                <h3 class="card-title" id="formTitle">➕ Add New</h3>
+                
+                <div class="type-selector">
+                    <button type="button" class="type-btn active refill" data-type="refill" onclick="setEntryType('refill')">
+                        <div class="type-btn-icon">💊</div>
+                        <div class="type-btn-label">Refill</div>
+                    </button>
+                    <button type="button" class="type-btn order" data-type="order" onclick="setEntryType('order')">
+                        <div class="type-btn-icon">📦</div>
+                        <div class="type-btn-label">Order</div>
+                    </button>
+                </div>
+
                 <form id="patientForm" novalidate>
+                    <input type="hidden" id="entryType" value="refill">
                     <div class="form-group"><label>Customer Name (Optional)</label><input type="text" id="name" placeholder="Enter name"></div>
                     <div class="form-group"><label>Phone <span class="required">*</span></label><input type="tel" id="phone" placeholder="966512345678"><div class="error-message" id="phoneError">Please enter a valid phone</div></div>
                     <div class="form-group"><label>Medication <span class="required">*</span></label><input type="text" id="med" placeholder="Medication name"><div class="error-message" id="medError">Please enter medication</div></div>
-                    <div class="row">
-                        <div class="form-group"><label>Dispense Date <span class="required">*</span></label><input type="date" id="date"><div class="error-message" id="dateError">Please select date</div></div>
-                        <div class="form-group"><label>Duration (days) <span class="required">*</span></label><input type="number" id="days" value="30" min="1" max="365"><div class="error-message" id="daysError">Enter 1-365</div></div>
+                    
+                    <div id="refillFields">
+                        <div class="row">
+                            <div class="form-group"><label>Dispense Date <span class="required">*</span></label><input type="date" id="date"><div class="error-message" id="dateError">Please select date</div></div>
+                            <div class="form-group"><label>Duration (days) <span class="required">*</span></label><input type="number" id="days" value="30" min="1" max="365"><div class="error-message" id="daysError">Enter 1-365</div></div>
+                        </div>
                     </div>
+
+                    <div id="orderFields" style="display:none">
+                        <div class="form-group">
+                            <label>From Branch <span class="required">*</span></label>
+                            <select id="branch">
+                                <option value="">Select branch...</option>
+                                <option>RASS2</option><option>RASS5</option><option>UNIZAH1</option><option>UNIZAH2</option><option>UNIZAH3</option><option>UNIZAH5</option>
+                                <option>BADAYA1</option><option>BADAYA2</option><option>BADAYA3</option><option>BADAYA5</option><option>BADAYA.MOR</option>
+                                <option>BUKAYRIAH1</option><option>BUKAYRIAH2</option><option>BUKAYRIAH.MOR</option>
+                                <option>BURIDAH1</option><option>BURIDAH2</option>
+                                <option>KHABRA1</option><option>MITHNAB1</option><option>MITHNAB2</option><option>RIYADH.KHABRA.MOR</option>
+                            </select>
+                            <div class="error-message" id="branchError">Please select branch</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Pickup Date (Optional)</label>
+                            <select id="pickupDate">
+                                <option value="">Not specified</option>
+                                <option value="today">Today</option>
+                                <option value="tomorrow">Tomorrow</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="customDateGroup" style="display:none">
+                            <label>Custom Date</label>
+                            <input type="date" id="customPickupDate">
+                        </div>
+                    </div>
+
                     <div class="form-group"><label>Notes</label><input type="text" id="notes" placeholder="Additional notes"></div>
-                    <button type="submit" class="btn btn-primary" id="submitBtn"><span>➕</span> Add Patient</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn"><span>➕</span> Add</button>
                     <button type="button" class="btn btn-secondary" onclick="resetForm()">Cancel</button>
                 </form>
             </div>
@@ -222,16 +283,23 @@
                 <h3 class="card-title">📋 Records</h3>
                 <div class="filters-row">
                     <input type="text" id="search" placeholder="🔍 Search...">
+                    <select id="typeFilter">
+                        <option value="all">All Types</option>
+                        <option value="refill">💊 Refill</option>
+                        <option value="order">📦 Orders</option>
+                    </select>
                     <select id="statusFilter">
                         <option value="all">All Status</option>
                         <option value="overdue">🔴 Overdue</option>
                         <option value="soon">🟡 Soon</option>
                         <option value="ok">🟢 OK</option>
+                        <option value="waiting">🔵 Waiting</option>
+                        <option value="pending">⏳ Pending</option>
                     </select>
                 </div>
                 <div class="table-container">
                     <table>
-                        <thead><tr><th>Customer</th><th>Medication</th><th>Refill Date</th><th>Status</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Type</th><th>Customer</th><th>Medication</th><th>Added</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody id="patientsTbody"></tbody>
                     </table>
                 </div>
@@ -240,7 +308,6 @@
         </div>
     </div>
     
-    <!-- ==================== ORDERS PAGE ==================== -->
     <div id="ordersPage" class="page">
         <div class="grid">
             <div class="card">
@@ -306,7 +373,6 @@
         </div>
     </div>
     
-    <!-- ==================== TRACKING PAGE ==================== -->
     <div id="trackingPage" class="page">
         <div class="stats">
             <div class="stat total"><div class="stat-num" id="tSent">0</div><div class="stat-label">Sent</div></div>
@@ -326,7 +392,6 @@
         </div>
     </div>
     
-    <!-- ==================== REPORTS PAGE ==================== -->
     <div id="reportsPage" class="page">
         <div class="card">
             <div class="header-row">
@@ -337,30 +402,65 @@
                     <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️</button>
                 </div>
             </div>
-        </div>
-        <div class="report-grid">
-            <div class="report-card"><div class="report-value" id="rSent">0</div><div class="report-label">📤 Sent</div></div>
-            <div class="report-card"><div class="report-value" style="color:var(--accent)" id="rConverted">0</div><div class="report-label">✅ Converted</div></div>
-            <div class="report-card"><div class="report-value" style="color:var(--primary)" id="rRate">0%</div><div class="report-label">📊 Rate</div><div class="progress"><div class="progress-bar" id="rBar" style="width:0%;background:var(--accent)"></div></div></div>
-        </div>
-        <div class="card">
-            <h3 class="card-title">📋 Summary</h3>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Metric</th><th>Count</th><th>%</th></tr></thead>
-                    <tbody id="summaryTb"></tbody>
-                </table>
+            <div class="report-tabs">
+                <button class="report-tab active" data-report="refill" onclick="showReportTab('refill')">💊 Refill</button>
+                <button class="report-tab" data-report="orders" onclick="showReportTab('orders')">📦 Orders</button>
             </div>
         </div>
-        <div class="card">
-            <h3 class="card-title">✅ Converted Patients</h3>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Patient</th><th>Phone</th><th>Medication</th><th>Reminder</th><th>Converted</th></tr></thead>
-                    <tbody id="convList"></tbody>
-                </table>
+
+        <div id="refillReport" class="report-section active">
+            <div class="report-grid">
+                <div class="report-card"><div class="report-value" id="rSent">0</div><div class="report-label">📤 Sent</div></div>
+                <div class="report-card"><div class="report-value" style="color:var(--accent)" id="rConverted">0</div><div class="report-label">✅ Converted</div></div>
+                <div class="report-card"><div class="report-value" style="color:var(--primary)" id="rRate">0%</div><div class="report-label">📊 Rate</div><div class="progress"><div class="progress-bar" id="rBar" style="width:0%;background:var(--accent)"></div></div></div>
+            </div>
+            <div class="card">
+                <h3 class="card-title">📋 Summary</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Metric</th><th>Count</th><th>%</th></tr></thead>
+                        <tbody id="summaryTb"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="card-title">✅ Converted Patients</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Patient</th><th>Phone</th><th>Medication</th><th>Reminder</th><th>Converted</th></tr></thead>
+                        <tbody id="convList"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
+
+        <div id="ordersReport" class="report-section">
+            <div class="report-grid">
+                <div class="report-card"><div class="report-value" style="color:var(--info)" id="oTotal">0</div><div class="report-label">📦 Total</div></div>
+                <div class="report-card"><div class="report-value" style="color:var(--accent)" id="oDelivered">0</div><div class="report-label">✅ Delivered</div></div>
+                <div class="report-card"><div class="report-value" style="color:var(--warning)" id="oNotDelivered">0</div><div class="report-label">⏳ Pending</div></div>
+                <div class="report-card"><div class="report-value" style="color:var(--primary)" id="oRate">0%</div><div class="report-label">📊 Rate</div><div class="progress"><div class="progress-bar" id="oBar" style="width:0%;background:var(--info)"></div></div></div>
+            </div>
+            <div class="card">
+                <h3 class="card-title">🏢 By Branch</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Branch</th><th>Total</th><th>Delivered</th><th>Pending</th></tr></thead>
+                        <tbody id="branchSummary"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="card-title">💊 Top Medications</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Medication</th><th>Orders</th></tr></thead>
+                        <tbody id="topMeds"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -408,8 +508,10 @@ const State = {
     currentPage: 1,
     searchQuery: '',
     statusFilter: 'all',
+    typeFilter: 'all',
+    entryType: 'refill',
     searchTimeout: null,
-    // Orders state
+    // Orders state (for quick list)
     orderItems: []
 };
 
@@ -417,6 +519,7 @@ const Utils = {
     formatDate(v){if(!v)return'';if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v))return v;const d=new Date(v);if(isNaN(d))return v;return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')},
     formatDisplayDate(s){if(!s)return'-';const d=new Date(s);if(isNaN(d))return s;return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})},
     getToday(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')},
+    getTomorrow(){const t=new Date();t.setDate(t.getDate()+1);return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')},
     parseHistory(h){if(!h)return[];if(Array.isArray(h))return h;try{return JSON.parse(h)}catch(e){return[]}},
     getRefillDate(p){const d=new Date(p.date);d.setDate(d.getDate()+parseInt(p.days||30));return d},
     getDaysUntilRefill(p){const t=new Date();t.setHours(0,0,0,0);const r=this.getRefillDate(p);r.setHours(0,0,0,0);return Math.ceil((r-t)/(1000*60*60*24))},
@@ -434,8 +537,17 @@ const UI = {
     showModal(o){const{icon='⚠️',title,message,confirmText='Confirm',confirmClass='',onConfirm}=o;document.getElementById('modalIcon').textContent=icon;document.getElementById('modalTitle').textContent=title;document.getElementById('modalMessage').textContent=message;const b=document.getElementById('modalConfirm');b.textContent=confirmText;b.className='modal-confirm '+confirmClass;b.onclick=()=>{onConfirm();this.closeModal()};document.getElementById('confirmModal').classList.add('active')},
     closeModal(){document.getElementById('confirmModal').classList.remove('active')},
     showFieldError(f,s){const e=document.getElementById(f);const m=document.getElementById(f+'Error');if(e)e.classList.toggle('error',s);if(m)m.classList.toggle('show',s)},
-    clearFieldErrors(){['phone','med','date','days','orderMed','orderBranch'].forEach(f=>this.showFieldError(f,false))},
-    showAlert(m){document.getElementById('alertText').textContent=m;document.getElementById('alertBanner').classList.remove('hidden')}
+    clearFieldErrors(){['phone','med','date','days','orderMed','orderBranch','branch'].forEach(f=>this.showFieldError(f,false))},
+    showAlert(m){document.getElementById('alertText').textContent=m;document.getElementById('alertBanner').classList.remove('hidden')},
+    updateOrdersBadge(){
+        const p=State.patients.filter(x=>x.type==='order'&&x.orderStatus!=='delivered').length;
+        const t=document.querySelector('[data-page="patients"]');
+        let b=t.querySelector('.tab-badge');
+        if(p>0){
+            if(!b){b=document.createElement('span');b.className='tab-badge';t.appendChild(b)}
+            b.textContent=p;
+        }else if(b)b.remove();
+    }
 };
 
 const API = {
@@ -444,8 +556,9 @@ const API = {
         UI.setLoading(true,'Loading...');
         try{
             const d=await this.request('get');
-            State.patients=d.filter(p=>p.type!=='order').map(p=>({
+            State.patients=d.map(p=>({
                 id:String(p.id||''),
+                type:p.type||'refill',
                 name:p.name||'',
                 phone:String(p.phone||''),
                 med:p.med||'',
@@ -453,6 +566,11 @@ const API = {
                 days:String(p.days||'30'),
                 notes:p.notes||'',
                 addedDate:Utils.formatDate(p.addedDate)||Utils.formatDate(p.date),
+                branch:p.branch||'',
+                pickupDate:p.pickupDate||'',
+                orderStatus:p.orderStatus||'waiting',
+                arrivedDate:Utils.formatDate(p.arrivedDate),
+                deliveredDate:Utils.formatDate(p.deliveredDate),
                 reminderSent:p.reminderSent||'no',
                 reminderDate:Utils.formatDate(p.reminderDate),
                 converted:p.converted||'no',
@@ -467,10 +585,11 @@ const API = {
         }finally{
             UI.setLoading(false);
             renderPatients();
+            UI.updateOrdersBadge();
         }
     },
     async savePatient(p,a){
-        const d={...p,type:'refill',history:JSON.stringify(p.history||[])};
+        const d={...p,history:JSON.stringify(p.history||[])};
         try{
             if(a==='delete')await fetch(CONFIG.API_URL+'?action=delete&id='+p.id);
             else await this.request(a,d);
@@ -480,169 +599,30 @@ const API = {
     }
 };
 
-// ==================== ORDERS MODULE ====================
-const OrdersModule = {
-    addItem(e) {
-        e.preventDefault();
-        UI.clearFieldErrors();
-        
-        const med = document.getElementById('orderMed').value.trim();
-        const qty = parseInt(document.getElementById('orderQty').value) || 1;
-        const branch = document.getElementById('orderBranch').value;
-        const isClient = document.getElementById('orderClient').checked;
-        
-        let valid = true;
-        if (!med) { UI.showFieldError('orderMed', true); valid = false; }
-        if (!branch) { UI.showFieldError('orderBranch', true); valid = false; }
-        
-        if (!valid) {
-            UI.showToast('Please fill required fields', 'error');
-            return;
-        }
-        
-        State.orderItems.push({
-            id: Date.now(),
-            med: med,
-            qty: qty,
-            branch: branch,
-            isClient: isClient
-        });
-        
-        // Reset form
-        document.getElementById('orderMed').value = '';
-        document.getElementById('orderQty').value = '1';
-        document.getElementById('orderClient').checked = false;
-        
-        this.renderOrders();
-        UI.showToast('Added to list', 'success');
-    },
-    
-    removeItem(id) {
-        State.orderItems = State.orderItems.filter(item => item.id !== id);
-        this.renderOrders();
-    },
-    
-    clearAll() {
-        if (State.orderItems.length === 0) return;
-        UI.showModal({
-            icon: '🗑️',
-            title: 'Clear All',
-            message: 'Remove all items from the list?',
-            confirmText: 'Clear',
-            confirmClass: 'danger',
-            onConfirm: () => {
-                State.orderItems = [];
-                this.renderOrders();
-                UI.showToast('List cleared', 'info');
-            }
-        });
-    },
-    
-    renderOrders() {
-        const container = document.getElementById('ordersList');
-        const sendSection = document.getElementById('sendSection');
-        const clearBtn = document.getElementById('clearAllBtn');
-        
-        if (State.orderItems.length === 0) {
-            container.innerHTML = '<div class="empty">No items added yet</div>';
-            sendSection.style.display = 'none';
-            clearBtn.style.display = 'none';
-            return;
-        }
-        
-        clearBtn.style.display = 'inline-flex';
-        
-        container.innerHTML = State.orderItems.map(item => `
-            <div class="order-item">
-                <div class="order-item-info">
-                    <div class="order-item-med">${Utils.sanitize(item.med)} ${item.isClient ? '<span class="badge badge-client">لعميل</span>' : ''}</div>
-                    <div class="order-item-details">Qty: ${item.qty}</div>
-                    <div class="order-item-branch">From: ${item.branch}</div>
-                </div>
-                <button class="order-item-del" onclick="OrdersModule.removeItem(${item.id})">🗑️</button>
-            </div>
-        `).join('');
-        
-        // Group by branch and render send section
-        this.renderGroupedOrders();
-    },
-    
-    renderGroupedOrders() {
-        const sendSection = document.getElementById('sendSection');
-        const container = document.getElementById('groupedOrders');
-        
-        if (State.orderItems.length === 0) {
-            sendSection.style.display = 'none';
-            return;
-        }
-        
-        sendSection.style.display = 'block';
-        
-        // Group items by branch
-        const grouped = {};
-        State.orderItems.forEach(item => {
-            if (!grouped[item.branch]) grouped[item.branch] = [];
-            grouped[item.branch].push(item);
-        });
-        
-        container.innerHTML = Object.entries(grouped).map(([branch, items]) => `
-            <div class="send-group">
-                <div class="send-group-header">
-                    <span class="send-group-title">📍 ${branch}</span>
-                    <span class="send-group-count">${items.length} item${items.length > 1 ? 's' : ''}</span>
-                </div>
-                <div class="send-group-items">
-                    ${items.map(item => `
-                        <div class="send-group-item ${item.isClient ? 'client' : ''}">
-                            • ${Utils.sanitize(item.med)} - الكمية: ${item.qty}${item.isClient ? ' (لعميل)' : ''}
-                        </div>
-                    `).join('')}
-                </div>
-                <button class="btn btn-info btn-sm" onclick="OrdersModule.sendEmail('${branch}')" style="margin-top:10px">
-                    📧 Send to ${branch}
-                </button>
-            </div>
-        `).join('');
-    },
-    
-    sendEmail(branch) {
-        const items = State.orderItems.filter(item => item.branch === branch);
-        if (items.length === 0) return;
-        
-        const email = BRANCH_EMAILS[branch];
-        const subject = `طلب تحويل أصناف - صيدلية الرس 1`;
-        
-        let body = `السلام عليكم\n\nنرجو تحويل الأصناف التالية:\n\n`;
-        items.forEach(item => {
-            body += `• ${item.med} - الكمية: ${item.qty}`;
-            if (item.isClient) body += ` (لعميل)`;
-            body += `\n`;
-        });
-        body += `\nوجزاكم الله خيراً\nصيدلية الرازي - الرس 1`;
-        
-        const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.open(mailtoLink);
-        
-        UI.showToast(`Email opened for ${branch}`, 'success');
-    },
-    
-    sendAllEmails() {
-        const grouped = {};
-        State.orderItems.forEach(item => {
-            if (!grouped[item.branch]) grouped[item.branch] = [];
-            grouped[item.branch].push(item);
-        });
-        
-        const branches = Object.keys(grouped);
-        if (branches.length === 0) return;
-        
-        branches.forEach((branch, index) => {
-            setTimeout(() => {
-                this.sendEmail(branch);
-            }, index * 500);
-        });
-    }
-};
+// ==================== UI HELPERS ====================
+function setEntryType(t){
+    State.entryType=t;
+    document.getElementById('entryType').value=t;
+    document.querySelectorAll('.type-btn').forEach(b=>{
+        b.classList.remove('active');
+        if(b.dataset.type===t)b.classList.add('active');
+    });
+    document.getElementById('refillFields').style.display=t==='refill'?'block':'none';
+    document.getElementById('orderFields').style.display=t==='order'?'block':'none';
+    document.getElementById('submitBtn').innerHTML='<span>➕</span> Add '+(t==='refill'?'Patient':'Order');
+    UI.clearFieldErrors();
+}
+
+function handlePickupDateChange(){
+    document.getElementById('customDateGroup').style.display=document.getElementById('pickupDate').value==='custom'?'block':'none';
+}
+
+function showReportTab(t){
+    document.querySelectorAll('.report-tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.report-section').forEach(x=>x.classList.remove('active'));
+    document.querySelector('[data-report="'+t+'"]').classList.add('active');
+    document.getElementById(t==='refill'?'refillReport':'ordersReport').classList.add('active');
+}
 
 // ==================== PATIENT ACTIONS ====================
 const PatientActions = {
@@ -650,16 +630,21 @@ const PatientActions = {
         e.preventDefault();
         UI.clearFieldErrors();
         
+        const t = State.entryType;
         const phone = document.getElementById('phone').value;
         const med = document.getElementById('med').value.trim();
-        const date = document.getElementById('date').value;
-        const days = parseInt(document.getElementById('days').value);
-        
         let valid = true;
+        
         if(!Utils.validatePhone(phone)){UI.showFieldError('phone',true);valid=false}
         if(!med){UI.showFieldError('med',true);valid=false}
-        if(!date){UI.showFieldError('date',true);valid=false}
-        if(!days||days<1||days>365){UI.showFieldError('days',true);valid=false}
+        
+        if(t==='refill'){
+            if(!document.getElementById('date').value){UI.showFieldError('date',true);valid=false}
+            const d=parseInt(document.getElementById('days').value);
+            if(!d||d<1||d>365){UI.showFieldError('days',true);valid=false}
+        } else {
+            if(!document.getElementById('branch').value){UI.showFieldError('branch',true);valid=false}
+        }
         
         if(!valid){UI.showToast('Please fix errors','error');return}
         
@@ -667,15 +652,29 @@ const PatientActions = {
         btn.disabled=true;
         btn.innerHTML='<span>⏳</span> Saving...';
         
+        let pk='';
+        if(t==='order'){
+            const pv=document.getElementById('pickupDate').value;
+            if(pv==='today')pk=Utils.getToday();
+            else if(pv==='tomorrow')pk=Utils.getTomorrow();
+            else if(pv==='custom')pk=document.getElementById('customPickupDate').value;
+        }
+        
         const p={
             id:State.editId||Date.now().toString(),
+            type:t,
             name:document.getElementById('name').value.trim(),
             phone:Utils.formatPhone(phone),
             med:med,
-            date:date,
-            days:String(days),
+            date:t==='refill'?document.getElementById('date').value:'',
+            days:t==='refill'?document.getElementById('days').value:'',
             notes:document.getElementById('notes').value.trim(),
             addedDate:State.editId?null:Utils.getToday(),
+            branch:t==='order'?document.getElementById('branch').value:'',
+            pickupDate:pk,
+            orderStatus:t==='order'?'waiting':'',
+            arrivedDate:'',
+            deliveredDate:'',
             reminderSent:'no',
             reminderDate:'',
             converted:'no',
@@ -686,6 +685,9 @@ const PatientActions = {
         if(State.editId){
             const x=State.patients.find(i=>i.id===State.editId);
             p.addedDate=x.addedDate;
+            p.orderStatus=x.orderStatus;
+            p.arrivedDate=x.arrivedDate;
+            p.deliveredDate=x.deliveredDate;
             p.reminderSent=x.reminderSent;
             p.reminderDate=x.reminderDate;
             p.converted=x.converted;
@@ -699,22 +701,36 @@ const PatientActions = {
         await API.savePatient(p,State.editId?'update':'add');
         UI.showToast(State.editId?'Updated!':'Added!','success');
         renderPatients();
+        UI.updateOrdersBadge();
         resetForm();
         btn.disabled=false;
-        btn.innerHTML='<span>➕</span> Add Patient';
+        btn.innerHTML='<span>➕</span> Add '+(t==='refill'?'Patient':'Order');
     },
     
     edit(id){
         const p=State.patients.find(x=>x.id===id);
         if(!p)return;
         State.editId=id;
+        setEntryType(p.type||'refill');
         document.getElementById('name').value=p.name;
         document.getElementById('phone').value=p.phone;
         document.getElementById('med').value=p.med;
-        document.getElementById('date').value=p.date;
-        document.getElementById('days').value=p.days;
         document.getElementById('notes').value=p.notes||'';
-        document.getElementById('formTitle').textContent='✏️ Edit Patient';
+        
+        if(p.type==='refill'){
+            document.getElementById('date').value=p.date;
+            document.getElementById('days').value=p.days;
+        } else {
+            document.getElementById('branch').value=p.branch;
+            if(p.pickupDate===Utils.getToday())document.getElementById('pickupDate').value='today';
+            else if(p.pickupDate===Utils.getTomorrow())document.getElementById('pickupDate').value='tomorrow';
+            else if(p.pickupDate){
+                document.getElementById('pickupDate').value='custom';
+                document.getElementById('customPickupDate').value=p.pickupDate;
+                document.getElementById('customDateGroup').style.display='block';
+            }
+        }
+        document.getElementById('formTitle').textContent='✏️ Edit';
         document.getElementById('submitBtn').innerHTML='<span>💾</span> Update';
         window.scrollTo({top:0,behavior:'smooth'});
     },
@@ -732,6 +748,7 @@ const PatientActions = {
                 await API.savePatient({id},'delete');
                 UI.showToast('Deleted!','success');
                 renderPatients();
+                UI.updateOrdersBadge();
             }
         });
     },
@@ -744,11 +761,11 @@ const PatientActions = {
             message:'Send reminder to "'+(p.name||'Unnamed')+'"?',
             confirmText:'Send',
             confirmClass:'success',
-            onConfirm:()=>this.sendWhatsApp(id)
+            onConfirm:()=>this.sendRefillWhatsApp(id)
         });
     },
     
-    sendWhatsApp(id){
+    sendRefillWhatsApp(id){
         const p=State.patients.find(x=>x.id===id);
         if(!p)return;
         const m='السلام عليكم ورحمة الله وبركاته\nصيدلية الرازي الرس 1 ترحب بكم\n\nهذا تذكير بموعد صرف الدواء الخاص بك:\n\nالدواء: '+p.med+'\n\nنسعد بتجهيزه لكم عبر:\n\n- الاستلام من الصيدلية\n- التوصيل لموقعكم\n\n📍 موقع الصيدلية:\nhttps://shorturl.at/M2Cq3\n\nنتمنى لكم دوام الصحة والعافية';
@@ -759,6 +776,40 @@ const PatientActions = {
         UI.showToast('WhatsApp opened!','success');
         renderPatients();
         renderTracking();
+    },
+    
+    confirmArrived(id){
+        const p=State.patients.find(x=>x.id===id);
+        UI.showModal({
+            icon:'📥',
+            title:'Order Arrived',
+            message:'Send WhatsApp to "'+(p.name||'Unnamed')+'"?',
+            confirmText:'Yes, Send',
+            confirmClass:'success',
+            onConfirm:()=>this.markArrived(id)
+        });
+    },
+    
+    async markArrived(id){
+        const p=State.patients.find(x=>x.id===id);
+        p.orderStatus='pending';
+        p.arrivedDate=Utils.getToday();
+        const m='السلام عليكم ورحمة الله وبركاته\nصيدلية الرازي الرس 1\n\nطلبكم جاهز للاستلام ✅\n\nالدواء: '+p.med+'\n\n📍 موقع الصيدلية:\nhttps://shorturl.at/M2Cq3\n\nنسعد بخدمتكم';
+        window.open('https://wa.me/'+p.phone+'?text='+encodeURIComponent(m),'_blank');
+        await API.savePatient(p,'update');
+        UI.showToast('WhatsApp opened!','success');
+        renderPatients();
+        UI.updateOrdersBadge();
+    },
+    
+    async markDelivered(id){
+        const p=State.patients.find(x=>x.id===id);
+        p.orderStatus='delivered';
+        p.deliveredDate=Utils.getToday();
+        await API.savePatient(p,'update');
+        UI.showToast('Delivered!','success');
+        renderPatients();
+        UI.updateOrdersBadge();
     },
     
     async markConverted(id){
@@ -796,39 +847,106 @@ const PatientActions = {
     }
 };
 
+// ==================== ORDERS MODULE (Quick List) ====================
+const OrdersModule = {
+    addItem(e) {
+        e.preventDefault();
+        UI.clearFieldErrors();
+        const med = document.getElementById('orderMed').value.trim();
+        const qty = parseInt(document.getElementById('orderQty').value) || 1;
+        const branch = document.getElementById('orderBranch').value;
+        const isClient = document.getElementById('orderClient').checked;
+        if (!med) { UI.showFieldError('orderMed', true); return; }
+        if (!branch) { UI.showFieldError('orderBranch', true); return; }
+        State.orderItems.push({id: Date.now(), med: med, qty: qty, branch: branch, isClient: isClient});
+        document.getElementById('orderMed').value = '';
+        document.getElementById('orderQty').value = '1';
+        document.getElementById('orderClient').checked = false;
+        this.renderOrders();
+        UI.showToast('Added to list', 'success');
+    },
+    removeItem(id) { State.orderItems = State.orderItems.filter(item => item.id !== id); this.renderOrders(); },
+    clearAll() { if (State.orderItems.length === 0) return; UI.showModal({icon: '🗑️', title: 'Clear All', message: 'Remove all items?', confirmText: 'Clear', confirmClass: 'danger', onConfirm: () => { State.orderItems = []; this.renderOrders(); }}); },
+    renderOrders() {
+        const c = document.getElementById('ordersList');
+        const ss = document.getElementById('sendSection');
+        const cb = document.getElementById('clearAllBtn');
+        if (State.orderItems.length === 0) { c.innerHTML = '<div class="empty">No items</div>'; ss.style.display = 'none'; cb.style.display = 'none'; return; }
+        cb.style.display = 'inline-flex';
+        c.innerHTML = State.orderItems.map(item => `<div class="order-item"><div class="order-item-info"><div class="order-item-med">${Utils.sanitize(item.med)} ${item.isClient?'<span class="badge badge-client">لعميل</span>':''}</div><div class="order-item-details">Qty: ${item.qty}</div><div class="order-item-branch">From: ${item.branch}</div></div><button class="order-item-del" onclick="OrdersModule.removeItem(${item.id})">🗑️</button></div>`).join('');
+        ss.style.display = 'block';
+        const grouped = {};
+        State.orderItems.forEach(item => { if (!grouped[item.branch]) grouped[item.branch] = []; grouped[item.branch].push(item); });
+        document.getElementById('groupedOrders').innerHTML = Object.entries(grouped).map(([branch, items]) => `<div class="send-group"><div class="send-group-header"><span class="send-group-title">📍 ${branch}</span><span class="send-group-count">${items.length} items</span></div><div class="send-group-items">${items.map(item => `<div class="send-group-item ${item.isClient?'client':''}">• ${Utils.sanitize(item.med)} - Qty: ${item.qty}</div>`).join('')}</div><button class="btn btn-info btn-sm" onclick="OrdersModule.sendEmail('${branch}')" style="margin-top:10px">📧 Send to ${branch}</button></div>`).join('');
+    },
+    sendEmail(branch) {
+        const items = State.orderItems.filter(item => item.branch === branch);
+        if (items.length === 0) return;
+        const email = BRANCH_EMAILS[branch];
+        const subject = `طلب تحويل أصناف - صيدلية الرس 1`;
+        let body = `السلام عليكم\n\nنرجو تحويل الأصناف التالية:\n\n`;
+        items.forEach(item => { body += `• ${item.med} - الكمية: ${item.qty}${item.isClient ? ' (لعميل)' : ''}\n`; });
+        body += `\nوجزاكم الله خيراً\nصيدلية الرازي - الرس 1`;
+        window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    },
+    sendAllEmails() {
+        const branches = [...new Set(State.orderItems.map(item => item.branch))];
+        branches.forEach((branch, index) => { setTimeout(() => { this.sendEmail(branch); }, index * 500); });
+    }
+};
+
 function checkTodayAlerts(){
-    const overdue=State.patients.filter(p=>Utils.getDaysUntilRefill(p)<0).length;
-    if(overdue>0)UI.showAlert('🔔 '+overdue+' overdue refills');
+    const t=Utils.getToday();
+    const o=State.patients.filter(p=>p.type==='order'&&p.orderStatus!=='delivered'&&p.pickupDate===t).length;
+    const r=State.patients.filter(p=>p.type==='refill'&&Utils.getDaysUntilRefill(p)<0).length;
+    let m=[];
+    if(o>0)m.push(o+' orders for today');
+    if(r>0)m.push(r+' overdue refills');
+    if(m.length>0)UI.showAlert('🔔 '+m.join(' • '));
 }
 
 function renderPatients(){
-    const s=State.searchQuery.toLowerCase();
-    const sf=State.statusFilter;
-    
+    const s=State.searchQuery.toLowerCase(), tf=State.typeFilter, sf=State.statusFilter;
     let f=State.patients.filter(p=>{
         const ms=p.name.toLowerCase().includes(s)||p.med.toLowerCase().includes(s)||p.phone.includes(s);
         if(!ms)return false;
+        if(tf!=='all'&&p.type!==tf)return false;
         if(sf!=='all'){
-            const d=Utils.getDaysUntilRefill(p);
-            if(sf==='overdue'&&d>=0)return false;
-            if(sf==='soon'&&(d<0||d>2))return false;
-            if(sf==='ok'&&d<=2)return false;
+            if(p.type==='refill'){
+                const d=Utils.getDaysUntilRefill(p);
+                if(sf==='overdue'&&d>=0)return false;
+                if(sf==='soon'&&(d<0||d>2))return false;
+                if(sf==='ok'&&d<=2)return false;
+                if(sf==='waiting'||sf==='pending')return false;
+            } else {
+                if(sf==='waiting'&&p.orderStatus!=='waiting')return false;
+                if(sf==='pending'&&p.orderStatus!=='pending')return false;
+                if(['overdue','soon','ok'].includes(sf))return false;
+            }
         }
         return true;
     });
     
-    f.sort((a,b)=>Utils.getRefillDate(a)-Utils.getRefillDate(b));
+    f.sort((a,b)=>{
+        if(a.type==='order'&&b.type==='refill')return -1;
+        if(a.type==='refill'&&b.type==='order')return 1;
+        if(a.type==='order')return new Date(a.addedDate)-new Date(b.addedDate);
+        return Utils.getRefillDate(a)-Utils.getRefillDate(b);
+    });
     
-    let w=0,o=0;
+    let w=0,o=0,po=0;
     State.patients.forEach(p=>{
-        const d=Utils.getDaysUntilRefill(p);
-        if(d<0)o++;
-        else if(d<=2)w++;
+        if(p.type==='refill'){
+            const d=Utils.getDaysUntilRefill(p);
+            if(d<0)o++;
+            else if(d<=2)w++;
+        } else if(p.type==='order'&&p.orderStatus!=='delivered')po++;
     });
     
     document.getElementById('total').textContent=State.patients.length;
     document.getElementById('warn').textContent=w;
     document.getElementById('over').textContent=o;
+    document.getElementById('pendingOrders').textContent=po;
     
     const tp=Math.ceil(f.length/CONFIG.ITEMS_PER_PAGE);
     State.currentPage=Math.min(State.currentPage,tp||1);
@@ -837,32 +955,47 @@ function renderPatients(){
     
     const tb=document.getElementById('patientsTbody');
     if(pg.length===0){
-        tb.innerHTML='<tr><td colspan="5"><div class="empty">No records found</div></td></tr>';
+        tb.innerHTML='<tr><td colspan="7"><div class="empty">No records found</div></td></tr>';
         document.getElementById('pagination').innerHTML='';
         return;
     }
     
     tb.innerHTML=pg.map(p=>{
-        const d=Utils.getDaysUntilRefill(p);
-        const dd=Utils.getRefillDate(p).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-        let st,sc;
-        if(d<0){st='Overdue '+Math.abs(d)+'d';sc='danger'}
-        else if(d<=2){st=d+'d left';sc='warn'}
-        else{st=d+'d left';sc='ok'}
+        const io=p.type==='order';
+        let st,sc,dd;
+        if(io){
+            if(p.orderStatus==='delivered'){st='✅ Delivered';sc='delivered'}
+            else if(p.orderStatus==='pending'){st='⏳ Pending';sc='waiting'}
+            else{st='🔵 Waiting';sc='info'}
+            dd=p.pickupDate?Utils.formatDisplayDate(p.pickupDate):'-';
+        }else{
+            const d=Utils.getDaysUntilRefill(p);
+            dd=Utils.getRefillDate(p).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+            if(d<0){st='Overdue '+Math.abs(d)+'d';sc='danger'}
+            else if(d<=2){st=d+'d left';sc='warn'}
+            else{st=d+'d left';sc='ok'}
+        }
         
+        const ad=Utils.formatDisplayDate(p.addedDate);
         const hc=(p.history||[]).length;
         const hb=hc>0?' <span class="badge badge-ok">'+hc+'</span>':'';
+        let ac='';
+        if(io){
+            if(p.orderStatus==='waiting')ac='<button class="arrived" onclick="PatientActions.confirmArrived(\''+p.id+'\')" title="Arrived">📥</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
+            else if(p.orderStatus==='pending')ac='<button class="done" onclick="PatientActions.markDelivered(\''+p.id+'\')" title="Delivered">✅</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
+            else ac='<button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
+        }else{
+            ac='<button class="wa" onclick="PatientActions.confirmWhatsApp(\''+p.id+'\')" title="WhatsApp">'+WA_ICON+'</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
+        }
         
-        return `<tr>
-            <td><div class="name">${Utils.sanitize(p.name)||'Unnamed'}${hb}</div><div class="phone"><span class="phone-copy" onclick="Utils.copyToClipboard('${p.phone}')" title="Copy">📋</span>${Utils.sanitize(p.phone)}</div></td>
+        return `<tr class="${io?'order-row':''}">
+            <td><span class="type-badge">${io?'📦':'💊'}</span></td>
+            <td><div class="name">${Utils.sanitize(p.name)||'Unnamed'}${hb}</div><div class="phone"><span class="phone-copy" onclick="Utils.copyToClipboard('${p.phone}')" title="Copy">📋</span>${Utils.sanitize(p.phone)}</div>${io&&p.branch?'<div class="branch-info">From: '+p.branch+'</div>':''}</td>
             <td><div class="med">${Utils.sanitize(p.med)}</div>${p.notes?'<div class="phone">'+Utils.sanitize(p.notes)+'</div>':''}</td>
+            <td><span class="date-added">${ad}</span></td>
             <td>${dd}</td>
             <td><span class="badge badge-${sc}">${st}</span></td>
-            <td><div class="actions">
-                <button class="wa" onclick="PatientActions.confirmWhatsApp('${p.id}')" title="WhatsApp">${WA_ICON}</button>
-                <button class="edit" onclick="PatientActions.edit('${p.id}')" title="Edit">✏️</button>
-                <button class="del" onclick="PatientActions.delete('${p.id}')" title="Delete">🗑️</button>
-            </div></td>
+            <td><div class="actions">${ac}</div></td>
         </tr>`;
     }).join('');
     
@@ -872,16 +1005,13 @@ function renderPatients(){
 function renderPagination(tp,ti){
     const pg=document.getElementById('pagination');
     if(tp<=1){pg.innerHTML='';return}
-    let h='<button onclick="changePage(1)" '+(State.currentPage===1?'disabled':'')+'>«</button>';
-    h+='<button onclick="changePage('+(State.currentPage-1)+')" '+(State.currentPage===1?'disabled':'')+'>‹</button>';
+    let h='<button onclick="changePage(1)" '+(State.currentPage===1?'disabled':'')+'>«</button><button onclick="changePage('+(State.currentPage-1)+')" '+(State.currentPage===1?'disabled':'')+'>‹</button>';
     const mv=5;
     let st=Math.max(1,State.currentPage-Math.floor(mv/2));
     let en=Math.min(tp,st+mv-1);
     if(en-st+1<mv)st=Math.max(1,en-mv+1);
     for(let i=st;i<=en;i++)h+='<button onclick="changePage('+i+')" class="'+(i===State.currentPage?'active':'')+'">'+i+'</button>';
-    h+='<button onclick="changePage('+(State.currentPage+1)+')" '+(State.currentPage===tp?'disabled':'')+'>›</button>';
-    h+='<button onclick="changePage('+tp+')" '+(State.currentPage===tp?'disabled':'')+'>»</button>';
-    h+='<span class="pagination-info">'+ti+' records</span>';
+    h+='<button onclick="changePage('+(State.currentPage+1)+')" '+(State.currentPage===tp?'disabled':'')+'>›</button><button onclick="changePage('+tp+')" '+(State.currentPage===tp?'disabled':'')+'>»</button><span class="pagination-info">'+ti+' records</span>';
     pg.innerHTML=h;
 }
 
@@ -889,19 +1019,16 @@ function changePage(p){State.currentPage=p;renderPatients()}
 
 function renderTracking(){
     const fl=document.getElementById('trackFilter').value;
-    let l=State.patients.filter(p=>p.reminderSent==='yes');
+    let l=State.patients.filter(p=>p.type==='refill'&&p.reminderSent==='yes');
     if(fl==='waiting')l=l.filter(p=>p.converted!=='yes');
     else if(fl==='converted')l=l.filter(p=>p.converted==='yes');
     l.sort((a,b)=>new Date(b.reminderDate)-new Date(a.reminderDate));
     
     let ts=0,tc=0;
-    State.patients.forEach(p=>{
+    State.patients.filter(p=>p.type==='refill').forEach(p=>{
         if(p.reminderSent==='yes')ts++;
         if(p.converted==='yes')tc++;
-        (p.history||[]).forEach(h=>{
-            if(h.reminderDate)ts++;
-            if(h.convertedDate)tc++;
-        });
+        (p.history||[]).forEach(h=>{if(h.reminderDate)ts++;if(h.convertedDate)tc++});
     });
     
     document.getElementById('tSent').textContent=ts;
@@ -909,11 +1036,7 @@ function renderTracking(){
     document.getElementById('tRate').textContent=ts>0?Math.round(tc/ts*100)+'%':'0%';
     
     const g=document.getElementById('trackGrid');
-    if(l.length===0){
-        g.innerHTML='<div class="empty" style="grid-column:1/-1">No records</div>';
-        return;
-    }
-    
+    if(l.length===0){g.innerHTML='<div class="empty" style="grid-column:1/-1">No records</div>';return}
     g.innerHTML=l.map(p=>{
         const hc=(p.history||[]).length;
         const hb=hc>0?'<div class="history-badge">🔄 '+hc+'</div>':'';
@@ -928,19 +1051,19 @@ function renderTracking(){
 function generateReport(){
     const m=parseInt(document.getElementById('reportMonth').value);
     const y=parseInt(document.getElementById('reportYear').value);
-    
+    generateRefillReport(m,y);
+    generateOrdersReport(m,y);
+}
+
+function generateRefillReport(m,y){
     let s=0,c=0;
     const cp=[];
-    
-    State.patients.forEach(p=>{
+    State.patients.filter(p=>p.type==='refill').forEach(p=>{
         if(p.reminderSent==='yes'&&p.reminderDate){
             const rd=new Date(p.reminderDate);
             if(rd.getMonth()===m&&rd.getFullYear()===y){
                 s++;
-                if(p.converted==='yes'){
-                    c++;
-                    cp.push({name:p.name,phone:p.phone,med:p.med,reminderDate:p.reminderDate,convertedDate:p.convertedDate});
-                }
+                if(p.converted==='yes'){c++;cp.push({name:p.name,phone:p.phone,med:p.med,reminderDate:p.reminderDate,convertedDate:p.convertedDate});}
             }
         }
         (p.history||[]).forEach(h=>{
@@ -948,39 +1071,47 @@ function generateReport(){
                 const rd=new Date(h.reminderDate);
                 if(rd.getMonth()===m&&rd.getFullYear()===y){
                     s++;
-                    if(h.convertedDate){
-                        c++;
-                        cp.push({name:p.name,phone:p.phone,med:p.med,reminderDate:h.reminderDate,convertedDate:h.convertedDate});
-                    }
+                    if(h.convertedDate){c++;cp.push({name:p.name,phone:p.phone,med:p.med,reminderDate:h.reminderDate,convertedDate:h.convertedDate});}
                 }
             }
         });
     });
-    
     const r=s>0?Math.round(c/s*100):0;
     const w=s-c;
     const wr=s>0?Math.round(w/s*100):0;
-    
     document.getElementById('rSent').textContent=s;
     document.getElementById('rConverted').textContent=c;
     document.getElementById('rRate').textContent=r+'%';
     document.getElementById('rBar').style.width=r+'%';
-    
-    document.getElementById('summaryTb').innerHTML=`
-        <tr><td>📤 Sent</td><td>${s}</td><td>100%</td></tr>
-        <tr><td>✅ Converted</td><td>${c}</td><td>${r}%</td></tr>
-        <tr><td>⏳ Waiting</td><td>${w}</td><td>${wr}%</td></tr>
-    `;
-    
-    document.getElementById('convList').innerHTML=cp.length>0?cp.map(p=>`
-        <tr>
-            <td class="name">${Utils.sanitize(p.name)||'Unnamed'}</td>
-            <td class="phone">${Utils.sanitize(p.phone)}</td>
-            <td class="med">${Utils.sanitize(p.med)}</td>
-            <td>${p.reminderDate}</td>
-            <td>${p.convertedDate}</td>
-        </tr>
-    `).join(''):'<tr><td colspan="5"><div class="empty">No conversions</div></td></tr>';
+    document.getElementById('summaryTb').innerHTML=`<tr><td>📤 Sent</td><td>${s}</td><td>100%</td></tr><tr><td>✅ Converted</td><td>${c}</td><td>${r}%</td></tr><tr><td>⏳ Waiting</td><td>${w}</td><td>${wr}%</td></tr>`;
+    document.getElementById('convList').innerHTML=cp.length>0?cp.map(p=>`<tr><td class="name">${Utils.sanitize(p.name)||'Unnamed'}</td><td class="phone">${Utils.sanitize(p.phone)}</td><td class="med">${Utils.sanitize(p.med)}</td><td>${p.reminderDate}</td><td>${p.convertedDate}</td></tr>`).join(''):'<tr><td colspan="5"><div class="empty">No conversions</div></td></tr>';
+}
+
+function generateOrdersReport(m,y){
+    let t=0,d=0;
+    const bs={},mc={};
+    State.patients.filter(p=>p.type==='order').forEach(p=>{
+        const ad=new Date(p.addedDate);
+        if(ad.getMonth()===m&&ad.getFullYear()===y){
+            t++;
+            if(!bs[p.branch])bs[p.branch]={total:0,delivered:0};
+            bs[p.branch].total++;
+            const mn=p.med.toLowerCase().trim();
+            mc[mn]=(mc[mn]||0)+1;
+            if(p.orderStatus==='delivered'){d++;bs[p.branch].delivered++}
+        }
+    });
+    const nd=t-d;
+    const r=t>0?Math.round(d/t*100):0;
+    document.getElementById('oTotal').textContent=t;
+    document.getElementById('oDelivered').textContent=d;
+    document.getElementById('oNotDelivered').textContent=nd;
+    document.getElementById('oRate').textContent=r+'%';
+    document.getElementById('oBar').style.width=r+'%';
+    const br=Object.entries(bs).sort((a,b)=>b[1].total-a[1].total).map(([b,s])=>`<tr><td><strong>${b}</strong></td><td>${s.total}</td><td>${s.delivered}</td><td>${s.total-s.delivered}</td></tr>`).join('');
+    document.getElementById('branchSummary').innerHTML=br||'<tr><td colspan="4"><div class="empty">No orders</div></td></tr>';
+    const tm=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([med,cnt])=>`<tr><td class="med">${Utils.sanitize(med)}</td><td>${cnt}</td></tr>`).join('');
+    document.getElementById('topMeds').innerHTML=tm||'<tr><td colspan="2"><div class="empty">No orders</div></td></tr>';
 }
 
 function resetForm(){
@@ -988,8 +1119,9 @@ function resetForm(){
     document.getElementById('patientForm').reset();
     document.getElementById('days').value='30';
     document.getElementById('date').valueAsDate=new Date();
-    document.getElementById('formTitle').textContent='➕ Add Patient';
-    document.getElementById('submitBtn').innerHTML='<span>➕</span> Add Patient';
+    document.getElementById('formTitle').textContent='➕ Add New';
+    document.getElementById('submitBtn').innerHTML='<span>➕</span> Add '+(State.entryType==='refill'?'Patient':'Order');
+    document.getElementById('customDateGroup').style.display='none';
     UI.clearFieldErrors();
 }
 
@@ -1010,6 +1142,8 @@ window.Utils=Utils;
 window.UI=UI;
 window.changePage=changePage;
 window.resetForm=resetForm;
+window.setEntryType=setEntryType;
+window.showReportTab=showReportTab;
 
 // Initialize
 document.addEventListener('DOMContentLoaded',()=>{
@@ -1029,14 +1163,21 @@ document.addEventListener('DOMContentLoaded',()=>{
         t.addEventListener('click',()=>showPage(t.dataset.page));
     });
     
-    document.getElementById('patientForm').addEventListener('submit',(e)=>PatientActions.save(e));
+    document.getElementById('patientForm').addEventListener('submit',PatientActions.save);
     document.getElementById('orderForm').addEventListener('submit',(e)=>OrdersModule.addItem(e));
+    document.getElementById('pickupDate').addEventListener('change',handlePickupDateChange);
     
     document.getElementById('search').addEventListener('input',Utils.debounce(e=>{
         State.searchQuery=e.target.value;
         State.currentPage=1;
         renderPatients();
     },CONFIG.SEARCH_DELAY));
+    
+    document.getElementById('typeFilter').addEventListener('change',e=>{
+        State.typeFilter=e.target.value;
+        State.currentPage=1;
+        renderPatients();
+    });
     
     document.getElementById('statusFilter').addEventListener('change',e=>{
         State.statusFilter=e.target.value;
