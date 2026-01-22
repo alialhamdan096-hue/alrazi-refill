@@ -31,11 +31,6 @@
         .modal-confirm{background:var(--primary);color:white}.modal-confirm:hover{background:var(--primary-light)}
         .modal-confirm.danger{background:var(--danger)}.modal-confirm.danger:hover{background:#dc2626}
         .modal-confirm.success{background:var(--success)}.modal-confirm.success:hover{background:#059669}
-        .history-list{text-align:left;margin-top:15px;border-top:1px solid #eee;padding-top:15px}
-        .history-item{padding:10px;border-bottom:1px solid #f5f5f5;font-size:13px;display:flex;justify-content:space-between;align-items:center}
-        .history-item:last-child{border-bottom:none}
-        .history-date{font-weight:600;color:var(--text-dark)}
-        .history-status{font-size:11px;padding:2px 8px;border-radius:10px}
         .container{max-width:1200px;margin:0 auto}
         .header-container{text-align:center;margin-bottom:20px}
         .logo-img{height:80px;margin-bottom:10px;filter:drop-shadow(0 2px 4px rgba(86,28,44,0.2))}
@@ -93,8 +88,7 @@
         th{text-align:left;padding:12px 10px;background:#f9f9f9;color:var(--gray);font-size:11px;text-transform:uppercase;border-bottom:2px solid #eee;white-space:nowrap}
         td{padding:12px 10px;border-bottom:1px solid #eee;vertical-align:middle}
         tr:hover{background:#fcfcfc}
-        .name{font-weight:bold;color:var(--primary);cursor:pointer;transition:var(--transition)}
-        .name:hover{text-decoration:underline;color:var(--primary-light)}
+        .name{font-weight:bold;color:var(--primary)}
         .phone{color:#888;font-size:12px;margin-top:2px;display:flex;align-items:center;gap:5px}
         .phone-copy{cursor:pointer;padding:2px 5px;border-radius:4px;transition:var(--transition)}.phone-copy:hover{background:#e5e5e5}
         .med{color:var(--primary);font-weight:500}
@@ -109,6 +103,7 @@
         .actions button{width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;font-size:14px;transition:var(--transition);display:flex;align-items:center;justify-content:center}
         .wa{background:#25D366;color:white}.wa svg{width:18px;height:18px;fill:white}
         .edit{background:rgba(86,28,44,0.1);color:var(--primary)}.del{background:rgba(239,68,68,0.1);color:#ef4444}
+        .hist-btn{background:rgba(245,158,11,0.15);color:#d97706}
         .email-btn{background:rgba(59,130,246,0.15);color:var(--info)}
         .arrived{background:rgba(59,130,246,0.15);color:var(--info)}.done{background:rgba(141,198,63,0.15);color:var(--accent-dark)}
         .actions button:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
@@ -160,6 +155,18 @@
         .send-group-items{font-size:12px;color:var(--text-dark);line-height:1.6}
         .send-group-item{padding:3px 0}
         .send-group-item.client{color:var(--danger)}
+        
+        /* History Styles */
+        .history-list{margin-top:10px}
+        .history-item{padding:12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+        .history-item:last-child{border:none}
+        .history-info{display:flex;flex-direction:column}
+        .history-date{font-weight:bold;color:var(--primary)}
+        .history-sub{font-size:11px;color:#888}
+        .history-status{font-size:11px;padding:4px 8px;border-radius:10px;font-weight:bold}
+        .status-success{background:#dcfce7;color:#166534}
+        .status-missed{background:#fee2e2;color:#991b1b}
+        
         @media(max-width:600px){
             body{padding:10px}
             .header-container h1{font-size:18px}
@@ -869,14 +876,24 @@ const PatientActions = {
     async renewPatient(id){
         const p=State.patients.find(x=>x.id===id);
         if(!p.history)p.history=[];
-        p.history.push({date:p.date,reminderDate:p.reminderDate,convertedDate:p.convertedDate});
+        
+        // Save CURRENT status to history before overwriting
+        p.history.push({
+            date: p.date,
+            reminderDate: p.reminderDate || 'Not Sent',
+            convertedDate: p.convertedDate || 'Not Bought',
+            status: p.converted === 'yes' ? 'Success' : 'Missed'
+        });
+
+        // Reset for NEW cycle
         p.date=Utils.getToday();
         p.reminderSent='no';
         p.reminderDate='';
         p.converted='no';
         p.convertedDate='';
+        
         await API.savePatient(p,'update');
-        UI.showToast('Renewed!','success');
+        UI.showToast('Renewed & Archived!','success');
         renderPatients();
         renderTracking();
     },
@@ -887,20 +904,28 @@ const PatientActions = {
         document.getElementById('historyTitle').textContent = (p.name || p.phone) + " History";
         const hl = document.getElementById('historyList');
         
-        let h = `<div class="history-item"><div class="history-date">📅 Added</div><div class="history-status">${p.addedDate || '-'}</div></div>`;
-        h += `<div class="history-item"><div class="history-date">💊 Last Dispense</div><div class="history-status">${p.date}</div></div>`;
+        // Show current cycle first
+        let h = `<div class="history-item" style="background:#f9f9f9"><div class="history-info"><div class="history-date">Current Cycle</div><div class="history-sub">Dispense: ${p.date}</div></div><div class="history-status" style="background:#eee">Active</div></div>`;
         
+        // Show archived cycles
         if(p.history && p.history.length > 0){
-            h += `<div style="margin:15px 0 5px 0;font-weight:bold;font-size:12px;color:#888;text-transform:uppercase">Previous Cycles</div>`;
-            h += p.history.map(x => {
-                let s = 'Waiting';
-                let c = '#888';
-                if(x.convertedDate){s='✅ Bought';c='green'}
-                else if(x.reminderDate){s='📤 Sent';c='orange'}
-                return `<div class="history-item"><div class="history-date">${x.date}</div><div class="history-status" style="color:${c};border:1px solid ${c}">${s}</div></div>`;
+            h += p.history.slice().reverse().map(x => {
+                let sClass = x.status === 'Success' ? 'status-success' : 'status-missed';
+                let sText = x.status === 'Success' ? '✅ Bought' : '⚠️ Missed';
+                
+                // If old format history (just dates)
+                if(!x.status && x.convertedDate) { sClass = 'status-success'; sText = '✅ Bought'; }
+                
+                return `<div class="history-item">
+                    <div class="history-info">
+                        <div class="history-date">${x.date}</div>
+                        <div class="history-sub">Reminder: ${x.reminderDate || '-'}</div>
+                    </div>
+                    <div class="history-status ${sClass}">${sText}</div>
+                </div>`;
             }).join('');
         } else {
-             h += `<div style="margin-top:15px;text-align:center;color:#999;font-size:12px;font-style:italic">No previous renewal history</div>`;
+             h += `<div style="padding:20px;text-align:center;color:#999;font-size:12px;font-style:italic">No previous history</div>`;
         }
         
         hl.innerHTML = h;
@@ -1046,12 +1071,12 @@ function renderPatients(){
             else if(p.orderStatus==='pending')ac='<button class="done" onclick="PatientActions.markDelivered(\''+p.id+'\')" title="Delivered">✅</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
             else ac='<button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
         }else{
-            ac='<button class="wa" onclick="PatientActions.confirmWhatsApp(\''+p.id+'\')" title="WhatsApp">'+WA_ICON+'</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
+            ac='<button class="wa" onclick="PatientActions.confirmWhatsApp(\''+p.id+'\')" title="WhatsApp">'+WA_ICON+'</button><button class="hist-btn" onclick="PatientActions.showHistory(\''+p.id+'\')" title="History">📜</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
         }
         
         return `<tr class="${io?'order-row':''}">
             <td><span class="type-badge">${io?'📦':'💊'}</span></td>
-            <td><div class="name" onclick="PatientActions.showHistory('${p.id}')">${Utils.sanitize(p.name)}${hb}</div><div class="phone"><span class="phone-copy" onclick="Utils.copyToClipboard('${p.phone}')" title="Copy">📋</span>${Utils.sanitize(p.phone)}</div>${io&&p.branch?'<div class="branch-info">From: '+p.branch+'</div>':''}</td>
+            <td><div class="name" onclick="PatientActions.edit('${p.id}')">${Utils.sanitize(p.name)}</div><div class="phone"><span class="phone-copy" onclick="Utils.copyToClipboard('${p.phone}')" title="Copy">📋</span>${Utils.sanitize(p.phone)}</div>${io&&p.branch?'<div class="branch-info">From: '+p.branch+'</div>':''}</td>
             <td><div class="med">${Utils.sanitize(p.med)}</div>${p.notes?'<div class="phone">'+Utils.sanitize(p.notes)+'</div>':''}</td>
             <td><span class="date-added">${ad}</span></td>
             <td>${dd}</td>
