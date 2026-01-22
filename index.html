@@ -22,7 +22,7 @@
         @keyframes spin{to{transform:rotate(360deg)}}
         .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9998;opacity:0;visibility:hidden;transition:var(--transition)}
         .modal-overlay.active{opacity:1;visibility:visible}
-        .modal{background:white;border-radius:var(--radius-lg);padding:25px;max-width:400px;width:90%;text-align:center;transform:scale(0.9);transition:var(--transition);max-height:80vh;overflow-y:auto}
+        .modal{background:white;border-radius:var(--radius-lg);padding:25px;max-width:400px;width:90%;text-align:center;transform:scale(0.9);transition:var(--transition)}
         .modal-overlay.active .modal{transform:scale(1)}
         .modal-icon{font-size:48px;margin-bottom:15px}.modal-title{font-size:18px;font-weight:bold;color:var(--text-dark);margin-bottom:10px}.modal-message{color:var(--gray);margin-bottom:20px;line-height:1.6}
         .modal-actions{display:flex;gap:10px;justify-content:center}
@@ -88,8 +88,7 @@
         th{text-align:left;padding:12px 10px;background:#f9f9f9;color:var(--gray);font-size:11px;text-transform:uppercase;border-bottom:2px solid #eee;white-space:nowrap}
         td{padding:12px 10px;border-bottom:1px solid #eee;vertical-align:middle}
         tr:hover{background:#fcfcfc}
-        .name{font-weight:bold;color:var(--primary);cursor:pointer;transition:var(--transition)}
-        .name:hover{text-decoration:underline;color:var(--primary-light)}
+        .name{font-weight:bold;color:var(--primary)}
         .phone{color:#888;font-size:12px;margin-top:2px;display:flex;align-items:center;gap:5px}
         .phone-copy{cursor:pointer;padding:2px 5px;border-radius:4px;transition:var(--transition)}.phone-copy:hover{background:#e5e5e5}
         .med{color:var(--primary);font-weight:500}
@@ -104,7 +103,6 @@
         .actions button{width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;font-size:14px;transition:var(--transition);display:flex;align-items:center;justify-content:center}
         .wa{background:#25D366;color:white}.wa svg{width:18px;height:18px;fill:white}
         .edit{background:rgba(86,28,44,0.1);color:var(--primary)}.del{background:rgba(239,68,68,0.1);color:#ef4444}
-        .hist-btn{background:rgba(245,158,11,0.15);color:#d97706}
         .email-btn{background:rgba(59,130,246,0.15);color:var(--info)}
         .arrived{background:rgba(59,130,246,0.15);color:var(--info)}.done{background:rgba(141,198,63,0.15);color:var(--accent-dark)}
         .actions button:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
@@ -156,18 +154,6 @@
         .send-group-items{font-size:12px;color:var(--text-dark);line-height:1.6}
         .send-group-item{padding:3px 0}
         .send-group-item.client{color:var(--danger)}
-        
-        /* History Styles */
-        .history-list{margin-top:10px}
-        .history-item{padding:12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
-        .history-item:last-child{border:none}
-        .history-info{display:flex;flex-direction:column}
-        .history-date{font-weight:bold;color:var(--primary)}
-        .history-sub{font-size:11px;color:#888}
-        .history-status{font-size:11px;padding:4px 8px;border-radius:10px;font-weight:bold}
-        .status-success{background:#dcfce7;color:#166534}
-        .status-missed{background:#fee2e2;color:#991b1b}
-        
         @media(max-width:600px){
             body{padding:10px}
             .header-container h1{font-size:18px}
@@ -206,19 +192,7 @@
 <body>
     <div class="toast-container" id="toastContainer"></div>
     <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
-    
     <div class="modal-overlay" id="confirmModal"><div class="modal"><div class="modal-icon" id="modalIcon">⚠️</div><div class="modal-title" id="modalTitle">Confirm</div><div class="modal-message" id="modalMessage">Are you sure?</div><div class="modal-actions"><button class="modal-cancel" onclick="UI.closeModal()">Cancel</button><button class="modal-confirm" id="modalConfirm">Confirm</button></div></div></div>
-    
-    <div class="modal-overlay" id="historyModal">
-        <div class="modal">
-            <div class="modal-icon">📂</div>
-            <div class="modal-title" id="historyTitle">Patient History</div>
-            <div class="history-list" id="historyList"></div>
-            <div class="modal-actions" style="margin-top:20px">
-                <button class="modal-cancel" onclick="document.getElementById('historyModal').classList.remove('active')">Close</button>
-            </div>
-        </div>
-    </div>
 
 <div class="container">
     <div class="header-container">
@@ -429,8 +403,7 @@
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                     <select id="reportMonth" style="width:auto"></select>
                     <select id="reportYear" style="width:auto"></select>
-                    <button class="btn btn-success btn-sm" onclick="exportReportToExcel()">📊 Export Excel</button>
-                    <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print</button>
+                    <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️</button>
                 </div>
             </div>
             <div class="report-tabs">
@@ -525,8 +498,7 @@ const BRANCH_EMAILS = {
 };
 
 const CONFIG = {
-    // ⬇⬇⬇ استبدل هذا الرابط برابطك الجديد من Google Apps Script ⬇⬇⬇
-    API_URL: 'https://script.google.com/macros/s/AKfycbxHHSYaPU91nDto8UdGqrh7XJKbRy-BEI7TFjNf0jQs7vJh9ahvZkwvas2a4U74qg_V0w/exec',
+    API_URL: 'https://script.google.com/macros/s/AKfycbzScqUsOESP_1EQZBqYvXLbkoOkNsDm2_o5twRHbU078-1e5HI7uSgmhDy_mkAmfLv-ig/exec',
     ITEMS_PER_PAGE: 10,
     SEARCH_DELAY: 300,
     TOAST_DURATION: 3000,
@@ -583,37 +555,7 @@ const UI = {
 };
 
 const API = {
-    async request(action, data = null) {
-        try {
-            const options = {
-                method: "POST",
-                body: JSON.stringify({ action: action, data: data })
-            };
-            
-            let url = CONFIG.API_URL;
-            if (action === 'delete') {
-                url += '?action=delete&id=' + data.id;
-                delete options.body;
-                options.method = "GET";
-            } else if (action === 'get') {
-                url += '?action=get';
-                delete options.body;
-                options.method = "GET";
-            }
-
-            const response = await fetch(url, options);
-            
-            if (!response.ok) throw new Error("Network response was not ok");
-            
-            const result = await response.json();
-            UI.setSyncStatus(true);
-            return result;
-        } catch (e) {
-            console.error('API Error:', e);
-            UI.setSyncStatus(false);
-            throw e;
-        }
-    },
+    async request(a,d=null){try{let u=CONFIG.API_URL+'?action='+a;if(d)u+='&data='+encodeURIComponent(JSON.stringify(d));const r=await fetch(u);UI.setSyncStatus(true);return await r.json()}catch(e){console.error('API Error:',e);UI.setSyncStatus(false);throw e}},
     async loadPatients(){
         UI.setLoading(true,'Loading...');
         try{
@@ -653,7 +595,8 @@ const API = {
     async savePatient(p,a){
         const d={...p,history:JSON.stringify(p.history||[])};
         try{
-            await this.request(a,d);
+            if(a==='delete')await fetch(CONFIG.API_URL+'?action=delete&id='+p.id);
+            else await this.request(a,d);
             UI.setSyncStatus(true);
         }catch(e){UI.setSyncStatus(false)}
         localStorage.setItem('patients_rass1',JSON.stringify(State.patients));
@@ -908,60 +851,16 @@ const PatientActions = {
     async renewPatient(id){
         const p=State.patients.find(x=>x.id===id);
         if(!p.history)p.history=[];
-        
-        // Save CURRENT status to history before overwriting
-        p.history.push({
-            date: p.date,
-            reminderDate: p.reminderDate || 'Not Sent',
-            convertedDate: p.convertedDate || 'Not Bought',
-            status: p.converted === 'yes' ? 'Success' : 'Missed'
-        });
-
-        // Reset for NEW cycle
+        p.history.push({date:p.date,reminderDate:p.reminderDate,convertedDate:p.convertedDate});
         p.date=Utils.getToday();
         p.reminderSent='no';
         p.reminderDate='';
         p.converted='no';
         p.convertedDate='';
-        
         await API.savePatient(p,'update');
-        UI.showToast('Renewed & Archived!','success');
+        UI.showToast('Renewed!','success');
         renderPatients();
         renderTracking();
-    },
-
-    showHistory(id){
-        const p=State.patients.find(x=>x.id===id);
-        if(!p)return;
-        document.getElementById('historyTitle').textContent = (p.name || p.phone) + " History";
-        const hl = document.getElementById('historyList');
-        
-        // Show current cycle first
-        let h = `<div class="history-item" style="background:#f9f9f9"><div class="history-info"><div class="history-date">Current Cycle</div><div class="history-sub">Dispense: ${p.date}</div></div><div class="history-status" style="background:#eee">Active</div></div>`;
-        
-        // Show archived cycles
-        if(p.history && p.history.length > 0){
-            h += p.history.slice().reverse().map(x => {
-                let sClass = x.status === 'Success' ? 'status-success' : 'status-missed';
-                let sText = x.status === 'Success' ? '✅ Bought' : '⚠️ Missed';
-                
-                // If old format history (just dates)
-                if(!x.status && x.convertedDate) { sClass = 'status-success'; sText = '✅ Bought'; }
-                
-                return `<div class="history-item">
-                    <div class="history-info">
-                        <div class="history-date">${x.date}</div>
-                        <div class="history-sub">Reminder: ${x.reminderDate || '-'}</div>
-                    </div>
-                    <div class="history-status ${sClass}">${sText}</div>
-                </div>`;
-            }).join('');
-        } else {
-             h += `<div style="padding:20px;text-align:center;color:#999;font-size:12px;font-style:italic">No previous history</div>`;
-        }
-        
-        hl.innerHTML = h;
-        document.getElementById('historyModal').classList.add('active');
     }
 };
 
@@ -1103,12 +1002,12 @@ function renderPatients(){
             else if(p.orderStatus==='pending')ac='<button class="done" onclick="PatientActions.markDelivered(\''+p.id+'\')" title="Delivered">✅</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
             else ac='<button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
         }else{
-            ac='<button class="wa" onclick="PatientActions.confirmWhatsApp(\''+p.id+'\')" title="WhatsApp">'+WA_ICON+'</button><button class="hist-btn" onclick="PatientActions.showHistory(\''+p.id+'\')" title="History">📂</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
+            ac='<button class="wa" onclick="PatientActions.confirmWhatsApp(\''+p.id+'\')" title="WhatsApp">'+WA_ICON+'</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
         }
         
         return `<tr class="${io?'order-row':''}">
             <td><span class="type-badge">${io?'📦':'💊'}</span></td>
-            <td><div class="name" onclick="PatientActions.edit('${p.id}')">${Utils.sanitize(p.name)}</div><div class="phone"><span class="phone-copy" onclick="Utils.copyToClipboard('${p.phone}')" title="Copy">📋</span>${Utils.sanitize(p.phone)}</div>${io&&p.branch?'<div class="branch-info">From: '+p.branch+'</div>':''}</td>
+            <td><div class="name">${Utils.sanitize(p.name)}${hb}</div><div class="phone"><span class="phone-copy" onclick="Utils.copyToClipboard('${p.phone}')" title="Copy">📋</span>${Utils.sanitize(p.phone)}</div>${io&&p.branch?'<div class="branch-info">From: '+p.branch+'</div>':''}</td>
             <td><div class="med">${Utils.sanitize(p.med)}</div>${p.notes?'<div class="phone">'+Utils.sanitize(p.notes)+'</div>':''}</td>
             <td><span class="date-added">${ad}</span></td>
             <td>${dd}</td>
@@ -1120,69 +1019,116 @@ function renderPatients(){
     renderPagination(tp,f.length);
 }
 
-function exportReportToExcel() {
-    const m = parseInt(document.getElementById('reportMonth').value);
-    const y = parseInt(document.getElementById('reportYear').value);
-    const activeTab = document.querySelector('.report-tab.active').dataset.report;
+function renderPagination(tp,ti){
+    const pg=document.getElementById('pagination');
+    if(tp<=1){pg.innerHTML='';return}
+    let h='<button onclick="changePage(1)" '+(State.currentPage===1?'disabled':'')+'>«</button><button onclick="changePage('+(State.currentPage-1)+')" '+(State.currentPage===1?'disabled':'')+'>‹</button>';
+    const mv=5;
+    let st=Math.max(1,State.currentPage-Math.floor(mv/2));
+    let en=Math.min(tp,st+mv-1);
+    if(en-st+1<mv)st=Math.max(1,en-mv+1);
+    for(let i=st;i<=en;i++)h+='<button onclick="changePage('+i+')" class="'+(i===State.currentPage?'active':'')+'">'+i+'</button>';
+    h+='<button onclick="changePage('+(State.currentPage+1)+')" '+(State.currentPage===tp?'disabled':'')+'>›</button><button onclick="changePage('+tp+')" '+(State.currentPage===tp?'disabled':'')+'>»</button><span class="pagination-info">'+ti+' records</span>';
+    pg.innerHTML=h;
+}
+
+function changePage(p){State.currentPage=p;renderPatients()}
+
+function renderTracking(){
+    const fl=document.getElementById('trackFilter').value;
+    let l=State.patients.filter(p=>p.type==='refill'&&p.reminderSent==='yes');
+    if(fl==='waiting')l=l.filter(p=>p.converted!=='yes');
+    else if(fl==='converted')l=l.filter(p=>p.converted==='yes');
+    l.sort((a,b)=>new Date(b.reminderDate)-new Date(a.reminderDate));
     
-    let csvContent = "\uFEFF"; // BOM for Excel to read Arabic
-    let filename = `Report_${y}_${m+1}.csv`;
+    let ts=0,tc=0;
+    State.patients.filter(p=>p.type==='refill').forEach(p=>{
+        if(p.reminderSent==='yes')ts++;
+        if(p.converted==='yes')tc++;
+        (p.history||[]).forEach(h=>{if(h.reminderDate)ts++;if(h.convertedDate)tc++});
+    });
+    
+    document.getElementById('tSent').textContent=ts;
+    document.getElementById('tConverted').textContent=tc;
+    document.getElementById('tRate').textContent=ts>0?Math.round(tc/ts*100)+'%':'0%';
+    
+    const g=document.getElementById('trackGrid');
+    if(l.length===0){g.innerHTML='<div class="empty" style="grid-column:1/-1">No records</div>';return}
+    g.innerHTML=l.map(p=>{
+        const hc=(p.history||[]).length;
+        const hb=hc>0?'<div class="history-badge">🔄 '+hc+'</div>':'';
+        if(p.converted==='yes'){
+            return `<div class="track-card converted">${hb}<div class="name">${Utils.sanitize(p.name)}</div><div class="phone">${Utils.sanitize(p.phone)}</div><div class="med">${Utils.sanitize(p.med)}</div><div class="info">📤 ${p.reminderDate}<br>✅ ${p.convertedDate}</div><button class="track-btn done" onclick="PatientActions.undoConverted('${p.id}')">✅ Converted (Undo)</button><button class="track-btn renew" onclick="PatientActions.renewPatient('${p.id}')">🔄 Renew</button></div>`;
+        }else{
+            return `<div class="track-card">${hb}<div class="name">${Utils.sanitize(p.name)}</div><div class="phone">${Utils.sanitize(p.phone)}</div><div class="med">${Utils.sanitize(p.med)}</div><div class="info">📤 ${p.reminderDate}</div><button class="track-btn" onclick="PatientActions.markConverted('${p.id}')">✅ Mark Converted</button></div>`;
+        }
+    }).join('');
+}
 
-    if (activeTab === 'refill') {
-        csvContent += "Type,Name,Phone,Medication,Reminder Date,Converted Date,Status\n";
-        
-        State.patients.filter(p => p.type === 'refill').forEach(p => {
-            let include = false;
-            let rowData = {};
+function generateReport(){
+    const m=parseInt(document.getElementById('reportMonth').value);
+    const y=parseInt(document.getElementById('reportYear').value);
+    generateRefillReport(m,y);
+    generateOrdersReport(m,y);
+}
 
-            // Check current cycle
-            if (p.reminderSent === 'yes' && p.reminderDate) {
-                const rd = new Date(p.reminderDate);
-                if (rd.getMonth() === m && rd.getFullYear() === y) {
-                    include = true;
-                    rowData = {
-                        name: p.name || 'Unnamed',
-                        phone: p.phone,
-                        med: p.med,
-                        remDate: p.reminderDate,
-                        convDate: p.convertedDate || '-',
-                        status: p.converted === 'yes' ? 'Converted' : 'Waiting'
-                    };
-                    csvContent += `Current,${rowData.name},${rowData.phone},${rowData.med},${rowData.remDate},${rowData.convDate},${rowData.status}\n`;
+function generateRefillReport(m,y){
+    let s=0,c=0;
+    const cp=[];
+    State.patients.filter(p=>p.type==='refill').forEach(p=>{
+        if(p.reminderSent==='yes'&&p.reminderDate){
+            const rd=new Date(p.reminderDate);
+            if(rd.getMonth()===m&&rd.getFullYear()===y){
+                s++;
+                if(p.converted==='yes'){c++;cp.push({name:p.name,phone:p.phone,med:p.med,reminderDate:p.reminderDate,convertedDate:p.convertedDate});}
+            }
+        }
+        (p.history||[]).forEach(h=>{
+            if(h.reminderDate){
+                const rd=new Date(h.reminderDate);
+                if(rd.getMonth()===m&&rd.getFullYear()===y){
+                    s++;
+                    if(h.convertedDate){c++;cp.push({name:p.name,phone:p.phone,med:p.med,reminderDate:h.reminderDate,convertedDate:h.convertedDate});}
                 }
             }
-
-            // Check history cycles
-            (p.history || []).forEach(h => {
-                if (h.reminderDate) {
-                    const rd = new Date(h.reminderDate);
-                    if (rd.getMonth() === m && rd.getFullYear() === y) {
-                        csvContent += `History,${p.name||'Unnamed'},${p.phone},${p.med},${h.reminderDate},${h.convertedDate||'-'},${h.status||(h.convertedDate?'Converted':'Waiting')}\n`;
-                    }
-                }
-            });
         });
-        filename = `Refill_Report_${y}_${m+1}.csv`;
+    });
+    const r=s>0?Math.round(c/s*100):0;
+    const w=s-c;
+    const wr=s>0?Math.round(w/s*100):0;
+    document.getElementById('rSent').textContent=s;
+    document.getElementById('rConverted').textContent=c;
+    document.getElementById('rRate').textContent=r+'%';
+    document.getElementById('rBar').style.width=r+'%';
+    document.getElementById('summaryTb').innerHTML=`<tr><td>📤 Sent</td><td>${s}</td><td>100%</td></tr><tr><td>✅ Converted</td><td>${c}</td><td>${r}%</td></tr><tr><td>⏳ Waiting</td><td>${w}</td><td>${wr}%</td></tr>`;
+    document.getElementById('convList').innerHTML=cp.length>0?cp.map(p=>`<tr><td class="name">${Utils.sanitize(p.name)}</td><td class="phone">${Utils.sanitize(p.phone)}</td><td class="med">${Utils.sanitize(p.med)}</td><td>${p.reminderDate}</td><td>${p.convertedDate}</td></tr>`).join(''):'<tr><td colspan="5"><div class="empty">No conversions</div></td></tr>';
+}
 
-    } else {
-        // Orders Export
-        csvContent += "Branch,Item Name,Added Date,Status,Delivered Date\n";
-        State.patients.filter(p => p.type === 'order').forEach(p => {
-            const ad = new Date(p.addedDate);
-            if (ad.getMonth() === m && ad.getFullYear() === y) {
-                csvContent += `${p.branch},${p.med},${p.addedDate},${p.orderStatus},${p.deliveredDate||'-'}\n`;
-            }
-        });
-        filename = `Orders_Report_${y}_${m+1}.csv`;
-    }
-
-    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+function generateOrdersReport(m,y){
+    let t=0,d=0;
+    const bs={},mc={};
+    State.patients.filter(p=>p.type==='order').forEach(p=>{
+        const ad=new Date(p.addedDate);
+        if(ad.getMonth()===m&&ad.getFullYear()===y){
+            t++;
+            if(!bs[p.branch])bs[p.branch]={total:0,delivered:0};
+            bs[p.branch].total++;
+            const mn=p.med.toLowerCase().trim();
+            mc[mn]=(mc[mn]||0)+1;
+            if(p.orderStatus==='delivered'){d++;bs[p.branch].delivered++}
+        }
+    });
+    const nd=t-d;
+    const r=t>0?Math.round(d/t*100):0;
+    document.getElementById('oTotal').textContent=t;
+    document.getElementById('oDelivered').textContent=d;
+    document.getElementById('oNotDelivered').textContent=nd;
+    document.getElementById('oRate').textContent=r+'%';
+    document.getElementById('oBar').style.width=r+'%';
+    const br=Object.entries(bs).sort((a,b)=>b[1].total-a[1].total).map(([b,s])=>`<tr><td><strong>${b}</strong></td><td>${s.total}</td><td>${s.delivered}</td><td>${s.total-s.delivered}</td></tr>`).join('');
+    document.getElementById('branchSummary').innerHTML=br||'<tr><td colspan="4"><div class="empty">No orders</div></td></tr>';
+    const tm=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([med,cnt])=>`<tr><td class="med">${Utils.sanitize(med)}</td><td>${cnt}</td></tr>`).join('');
+    document.getElementById('topMeds').innerHTML=tm||'<tr><td colspan="2"><div class="empty">No orders</div></td></tr>';
 }
 
 function resetForm(){
@@ -1215,7 +1161,6 @@ window.changePage=changePage;
 window.resetForm=resetForm;
 window.setEntryType=setEntryType;
 window.showReportTab=showReportTab;
-window.exportReportToExcel=exportReportToExcel; // Export globally
 
 // Initialize
 document.addEventListener('DOMContentLoaded',()=>{
