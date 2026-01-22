@@ -39,7 +39,6 @@
         .tab{background:rgba(255,255,255,0.7);border:none;padding:12px 30px;border-radius:var(--radius-full);cursor:pointer;font-weight:bold;color:var(--gray);transition:var(--transition);box-shadow:var(--shadow-sm);position:relative}
         .tab.active{background:var(--primary);color:white;box-shadow:0 4px 10px rgba(86,28,44,0.3)}
         .tab:hover:not(.active){background:white;transform:translateY(-2px)}
-        .tab-badge{position:absolute;top:-5px;right:-5px;background:var(--danger);color:white;font-size:11px;font-weight:bold;padding:2px 6px;border-radius:var(--radius-full);min-width:20px}
         .page{display:none;animation:fadeIn .3s ease}.page.active{display:block}
         @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
         .grid{display:grid;grid-template-columns:350px 1fr;gap:20px}
@@ -205,17 +204,19 @@ const UI={
     updateOrdersBadge(){const p=State.patients.filter(x=>x.type==='order'&&x.orderStatus!=='delivered').length;const t=document.querySelector('[data-page="patients"]');let b=t.querySelector('.tab-badge');if(p>0){if(!b){b=document.createElement('span');b.className='tab-badge';t.appendChild(b)}b.textContent=p}else if(b)b.remove()}
 };
 const API={
-    async request(a, d = null) {
-        try {
+    async request(a,d=null){
+        try{
+            // تم التعديل: استخدام POST مع JSON.stringify
             const options = {
                 method: 'POST',
+                // Google Apps Script requires text/plain to avoid preflight issues in some cases
                 body: JSON.stringify({ action: a, data: d })
             };
             const r = await fetch(CONFIG.API_URL, options);
             UI.setSyncStatus(true);
             return await r.json();
-        } catch (e) {
-            console.error('API Error:', e);
+        } catch(e){
+            console.error('API Error:',e);
             UI.setSyncStatus(false);
             throw e;
         }
