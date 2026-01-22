@@ -88,7 +88,8 @@
         th{text-align:left;padding:12px 10px;background:#f9f9f9;color:var(--gray);font-size:11px;text-transform:uppercase;border-bottom:2px solid #eee;white-space:nowrap}
         td{padding:12px 10px;border-bottom:1px solid #eee;vertical-align:middle}
         tr:hover{background:#fcfcfc}
-        .name{font-weight:bold;color:var(--primary)}
+        .name{font-weight:bold;color:var(--primary);cursor:pointer;transition:var(--transition)}
+        .name:hover{text-decoration:underline;color:var(--primary-light)}
         .phone{color:#888;font-size:12px;margin-top:2px;display:flex;align-items:center;gap:5px}
         .phone-copy{cursor:pointer;padding:2px 5px;border-radius:4px;transition:var(--transition)}.phone-copy:hover{background:#e5e5e5}
         .med{color:var(--primary);font-weight:500}
@@ -210,7 +211,7 @@
     
     <div class="modal-overlay" id="historyModal">
         <div class="modal">
-            <div class="modal-icon">📜</div>
+            <div class="modal-icon">📂</div>
             <div class="modal-title" id="historyTitle">Patient History</div>
             <div class="history-list" id="historyList"></div>
             <div class="modal-actions" style="margin-top:20px">
@@ -428,7 +429,8 @@
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                     <select id="reportMonth" style="width:auto"></select>
                     <select id="reportYear" style="width:auto"></select>
-                    <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️</button>
+                    <button class="btn btn-success btn-sm" onclick="exportReportToExcel()">📊 Export Excel</button>
+                    <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print</button>
                 </div>
             </div>
             <div class="report-tabs">
@@ -1071,7 +1073,7 @@ function renderPatients(){
             else if(p.orderStatus==='pending')ac='<button class="done" onclick="PatientActions.markDelivered(\''+p.id+'\')" title="Delivered">✅</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
             else ac='<button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
         }else{
-            ac='<button class="wa" onclick="PatientActions.confirmWhatsApp(\''+p.id+'\')" title="WhatsApp">'+WA_ICON+'</button><button class="hist-btn" onclick="PatientActions.showHistory(\''+p.id+'\')" title="History">📜</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
+            ac='<button class="wa" onclick="PatientActions.confirmWhatsApp(\''+p.id+'\')" title="WhatsApp">'+WA_ICON+'</button><button class="hist-btn" onclick="PatientActions.showHistory(\''+p.id+'\')" title="History">📂</button><button class="edit" onclick="PatientActions.edit(\''+p.id+'\')" title="Edit">✏️</button><button class="del" onclick="PatientActions.delete(\''+p.id+'\')" title="Delete">🗑️</button>';
         }
         
         return `<tr class="${io?'order-row':''}">
@@ -1200,6 +1202,71 @@ function generateOrdersReport(m,y){
     document.getElementById('topMeds').innerHTML=tm||'<tr><td colspan="2"><div class="empty">No orders</div></td></tr>';
 }
 
+function exportReportToExcel() {
+    const m = parseInt(document.getElementById('reportMonth').value);
+    const y = parseInt(document.getElementById('reportYear').value);
+    const activeTab = document.querySelector('.report-tab.active').dataset.report;
+    
+    let csvContent = "\uFEFF"; // BOM for Excel to read Arabic
+    let filename = `Report_${y}_${m+1}.csv`;
+
+    if (activeTab === 'refill') {
+        csvContent += "Type,Name,Phone,Medication,Reminder Date,Converted Date,Status\n";
+        
+        State.patients.filter(p => p.type === 'refill').forEach(p => {
+            let include = false;
+            let rowData = {};
+
+            // Check current cycle
+            if (p.reminderSent === 'yes' && p.reminderDate) {
+                const rd = new Date(p.reminderDate);
+                if (rd.getMonth() === m && rd.getFullYear() === y) {
+                    include = true;
+                    rowData = {
+                        name: p.name || 'Unnamed',
+                        phone: p.phone,
+                        med: p.med,
+                        remDate: p.reminderDate,
+                        convDate: p.convertedDate || '-',
+                        status: p.converted === 'yes' ? 'Converted' : 'Waiting'
+                    };
+                    csvContent += `Current,${rowData.name},${rowData.phone},${rowData.med},${rowData.remDate},${rowData.convDate},${rowData.status}\n`;
+                }
+            }
+
+            // Check history cycles
+            (p.history || []).forEach(h => {
+                if (h.reminderDate) {
+                    const rd = new Date(h.reminderDate);
+                    if (rd.getMonth() === m && rd.getFullYear() === y) {
+                        csvContent += `History,${p.name||'Unnamed'},${p.phone},${p.med},${h.reminderDate},${h.convertedDate||'-'},${h.status||(h.convertedDate?'Converted':'Waiting')}\n`;
+                    }
+                }
+            });
+        });
+        filename = `Refill_Report_${y}_${m+1}.csv`;
+
+    } else {
+        // Orders Export
+        csvContent += "Branch,Item Name,Added Date,Status,Delivered Date\n";
+        State.patients.filter(p => p.type === 'order').forEach(p => {
+            const ad = new Date(p.addedDate);
+            if (ad.getMonth() === m && ad.getFullYear() === y) {
+                csvContent += `${p.branch},${p.med},${p.addedDate},${p.orderStatus},${p.deliveredDate||'-'}\n`;
+            }
+        });
+        filename = `Orders_Report_${y}_${m+1}.csv`;
+    }
+
+    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 function resetForm(){
     State.editId=null;
     document.getElementById('patientForm').reset();
@@ -1230,6 +1297,7 @@ window.changePage=changePage;
 window.resetForm=resetForm;
 window.setEntryType=setEntryType;
 window.showReportTab=showReportTab;
+window.exportReportToExcel=exportReportToExcel; // Export globally
 
 // Initialize
 document.addEventListener('DOMContentLoaded',()=>{
