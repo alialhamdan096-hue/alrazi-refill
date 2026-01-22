@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -177,18 +178,7 @@
         </div>
     </div>
 <script>
-// ==================== CONFIGURATION ====================
-// ✅ تم تحديث الرابط إلى الرابط الجديد الذي ينتهي بـ l5Rw/exec
-const CONFIG = {
-    API_URL: 'https://script.google.com/macros/s/AKfycbypBOv8BaBFExtpbOOH45z4vRMhlgqi1scWG7b0AGVECX573Pf54iEKOa1kFjqcSJl5Rw/exec',
-    ITEMS_PER_PAGE: 10,
-    SEARCH_DELAY: 300,
-    TOAST_DURATION: 3000,
-    PHONE_REGEX: /^(966|0)?5\d{8}$/,
-    MONTHS: ['January','February','March','April','May','June','July','August','September','October','November','December']
-};
-// =======================================================
-
+const CONFIG={API_URL:'https://script.google.com/macros/s/AKfycbzScqUsOESP_1EQZBqYvXLbkoOkNsDm2_o5twRHbU078-1e5HI7uSgmhDy_mkAmfLv-ig/exec',ITEMS_PER_PAGE:10,SEARCH_DELAY:300,TOAST_DURATION:3000,PHONE_REGEX:/^(966|0)?5\d{8}$/,MONTHS:['January','February','March','April','May','June','July','August','September','October','November','December']};
 const State={patients:[],editId:null,currentPage:1,searchQuery:'',typeFilter:'all',statusFilter:'all',entryType:'refill',searchTimeout:null};
 const Utils={
     formatDate(v){if(!v)return'';if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v))return v;const d=new Date(v);if(isNaN(d))return v;return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')},
@@ -216,24 +206,9 @@ const UI={
     updateOrdersBadge(){const p=State.patients.filter(x=>x.type==='order'&&x.orderStatus!=='delivered').length;const t=document.querySelector('[data-page="patients"]');let b=t.querySelector('.tab-badge');if(p>0){if(!b){b=document.createElement('span');b.className='tab-badge';t.appendChild(b)}b.textContent=p}else if(b)b.remove()}
 };
 const API={
-    // ✅ تم التعديل لاستخدام POST لضمان توافق الاتصال
-    async request(a,d=null){
-        try{
-            const options = {
-                method: 'POST',
-                body: JSON.stringify({ action: a, data: d })
-            };
-            const r=await fetch(CONFIG.API_URL, options);
-            UI.setSyncStatus(true);
-            return await r.json()
-        }catch(e){
-            console.error('API Error:',e);
-            UI.setSyncStatus(false);
-            throw e
-        }
-    },
+    async request(a,d=null){try{let u=CONFIG.API_URL+'?action='+a;if(d)u+='&data='+encodeURIComponent(JSON.stringify(d));const r=await fetch(u);UI.setSyncStatus(true);return await r.json()}catch(e){console.error('API Error:',e);UI.setSyncStatus(false);throw e}},
     async loadPatients(){UI.setLoading(true,'Loading...');try{const d=await this.request('get');State.patients=d.map(p=>({id:String(p.id||''),type:p.type||'refill',name:p.name||'',phone:String(p.phone||''),med:p.med||'',date:Utils.formatDate(p.date),days:String(p.days||'30'),notes:p.notes||'',addedDate:Utils.formatDate(p.addedDate)||Utils.formatDate(p.date),branch:p.branch||'',pickupDate:p.pickupDate||'',orderStatus:p.orderStatus||'waiting',arrivedDate:Utils.formatDate(p.arrivedDate),deliveredDate:Utils.formatDate(p.deliveredDate),reminderSent:p.reminderSent||'no',reminderDate:Utils.formatDate(p.reminderDate),converted:p.converted||'no',convertedDate:Utils.formatDate(p.convertedDate),history:Utils.parseHistory(p.history)}));localStorage.setItem('patients_rass1',JSON.stringify(State.patients));checkTodayAlerts()}catch(e){State.patients=JSON.parse(localStorage.getItem('patients_rass1'))||[];UI.showToast('Loaded from cache','warning')}finally{UI.setLoading(false);renderPatients();UI.updateOrdersBadge()}},
-    async savePatient(p,a){const d={...p,history:JSON.stringify(p.history||[])};try{if(a==='delete')await this.request('delete', {id: p.id});else await this.request(a,d);UI.setSyncStatus(true)}catch(e){UI.setSyncStatus(false)}localStorage.setItem('patients_rass1',JSON.stringify(State.patients))}
+    async savePatient(p,a){const d={...p,history:JSON.stringify(p.history||[])};try{if(a==='delete')await fetch(CONFIG.API_URL+'?action=delete&id='+p.id);else await this.request(a,d);UI.setSyncStatus(true)}catch(e){UI.setSyncStatus(false)}localStorage.setItem('patients_rass1',JSON.stringify(State.patients))}
 };
 function setEntryType(t){State.entryType=t;document.getElementById('entryType').value=t;document.querySelectorAll('.type-btn').forEach(b=>{b.classList.remove('active');if(b.dataset.type===t)b.classList.add('active')});document.getElementById('refillFields').style.display=t==='refill'?'block':'none';document.getElementById('orderFields').style.display=t==='order'?'block':'none';document.getElementById('submitBtn').innerHTML='<span>➕</span> Add '+(t==='refill'?'Patient':'Order');UI.clearFieldErrors()}
 function handlePickupDateChange(){document.getElementById('customDateGroup').style.display=document.getElementById('pickupDate').value==='custom'?'block':'none'}
