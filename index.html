@@ -3,246 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alrazi Pharmacy System</title>
+    <title>Rass 1 Pharmacy System</title>
     <style>
-        :root{--primary:#561C2C;--accent:#8DC63F;--bg:#f4f4f9;--text:#333;--danger:#ef4444;--wa:#25D366;}
-        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:var(--bg);margin:0;padding:20px;color:var(--text)}
-        .container{max-width:800px;margin:0 auto}
-        .card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.05);margin-bottom:20px}
-        h1{color:var(--primary);text-align:center;margin-bottom:20px}
+        :root{--primary:#561C2C;--primary-light:#7a2840;--accent:#8DC63F;--text-dark:#333;--gray:#666;--gray-light:#f5f5f5;--white:#fff;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;--shadow-sm:0 2px 4px rgba(0,0,0,0.05);--shadow-md:0 4px 12px rgba(0,0,0,0.08);--radius-md:12px;--transition:0.3s ease}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(180deg,#f9f6f2 0%,#e8dccf 100%);color:var(--text-dark);min-height:100vh;padding:20px;line-height:1.6}
         
-        /* Form Elements */
-        input,select,button{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box}
-        input:focus,select:focus{outline:none;border-color:var(--primary)}
-        
-        /* Buttons */
-        button{cursor:pointer;font-weight:bold;color:#fff;background:var(--primary);border:none;transition:0.2s}
-        button:hover{opacity:0.9;transform:translateY(-1px)}
-        .nav{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
-        .nav button{flex:1;background:var(--primary);opacity:0.8}
-        .nav button.active{opacity:1;box-shadow:0 2px 8px rgba(86,28,44,0.3)}
-        
-        /* Action Buttons */
-        .actions{display:flex;gap:5px;justify-content:flex-end}
-        .actions button{width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:6px}
-        .btn-wa{background:var(--wa)!important}
-        .btn-edit{background:#f3f4f6!important;color:#333!important}
-        .btn-del{background:var(--danger)!important}
-        
-        /* Table */
-        .table-wrap{overflow-x:auto}
-        table{width:100%;border-collapse:collapse;margin-top:10px;min-width:600px}
-        th{text-align:left;padding:12px;background:#f8f9fa;color:#666;font-size:13px;border-bottom:2px solid #eee}
-        td{padding:12px;border-bottom:1px solid #eee;vertical-align:middle}
-        
-        /* Badges */
-        .badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:bold;display:inline-block}
-        .b-ok{background:rgba(141,198,63,0.15);color:#4a7a16}
-        .b-bad{background:rgba(239,68,68,0.15);color:#b91c1c}
-        .b-ord{background:rgba(59,130,246,0.15);color:#1e40af}
-        
-        /* Utils */
-        .hidden{display:none}
-        #loader{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:none;align-items:center;justify-content:center;z-index:99;flex-direction:column}
-        .spinner{width:40px;height:40px;border:4px solid #eee;border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+        /* Loading & Toast */
+        .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;opacity:0;visibility:hidden;transition:var(--transition)}
+        .loading-overlay.active{opacity:1;visibility:visible}
+        .spinner{width:50px;height:50px;border:4px solid var(--gray-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
+        .toast-container{position:fixed;top:20px;right:20px;z-index:10000}
+        .toast{padding:12px 20px;background:#333;color:white;border-radius:8px;margin-bottom:10px;animation:slideIn 0.3s ease}
+        @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+
+        /* Layout */
+        .container{max-width:1200px;margin:0 auto}
+        .header-container{text-align:center;margin-bottom:25px}
+        h1{color:var(--primary);margin-bottom:10px;font-weight:700}
+        
+        /* Tabs */
+        .tabs{display:flex;justify-content:center;gap:10px;margin-bottom:25px;flex-wrap:wrap}
+        .tab{background:rgba(255,255,255,0.7);border:none;padding:12px 30px;border-radius:50px;cursor:pointer;font-weight:bold;color:var(--gray);transition:var(--transition);box-shadow:var(--shadow-sm)}
+        .tab.active{background:var(--primary);color:white;box-shadow:0 4px 10px rgba(86,28,44,0.3)}
+        .page{display:none;animation:fadeIn .3s ease}.page.active{display:block}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+        /* Cards & Grid */
+        .grid{display:grid;grid-template-columns:350px 1fr;gap:20px}
+        @media(max-width:900px){.grid{grid-template-columns:1fr}}
+        .card{background:var(--white);border-radius:var(--radius-md);padding:25px;margin-bottom:20px;box-shadow:var(--shadow-md)}
+        .card-title{color:var(--primary);margin-bottom:20px;font-size:18px;font-weight:600}
+
+        /* Stats */
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:15px;margin-bottom:25px}
+        .stat{background:white;padding:20px;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);position:relative;overflow:hidden;border-bottom:4px solid #ddd}
+        .stat.total{border-color:var(--primary)}
+        .stat.w{border-color:var(--warning)}
+        .stat.d{border-color:var(--danger)}
+        .stat-num{font-size:28px;font-weight:800;color:var(--text-dark)}
+        .stat-label{color:#888;font-size:12px;text-transform:uppercase;margin-top:5px}
+
+        /* Form */
+        .type-selector{display:flex;gap:10px;margin-bottom:20px}
+        .type-btn{flex:1;padding:15px;border:2px solid #e5e5e5;border-radius:var(--radius-md);background:white;cursor:pointer;transition:var(--transition);text-align:center}
+        .type-btn.active{border-color:var(--primary);background:rgba(86,28,44,0.05)}
+        .form-group{margin-bottom:15px}
+        label{display:block;margin-bottom:5px;font-weight:600;font-size:14px}
+        input,select{width:100%;padding:12px;border:2px solid #e5e5e5;border-radius:8px;transition:var(--transition)}
+        input:focus,select:focus{border-color:var(--primary);outline:none}
+        .btn{width:100%;padding:12px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;background:var(--primary);color:white;transition:0.2s}
+        .btn:hover{background:var(--primary-light)}
+
+        /* Table */
+        .table-container{overflow-x:auto}
+        table{width:100%;border-collapse:separate;border-spacing:0;margin-top:15px}
+        th{text-align:left;padding:15px;background:#f9f9f9;color:var(--gray);font-size:12px;text-transform:uppercase;border-bottom:2px solid #eee}
+        td{padding:15px;border-bottom:1px solid #eee;vertical-align:middle}
+        .name{font-weight:bold;color:var(--primary)}
+        .phone{color:#888;font-size:13px}
+        .badge{padding:6px 14px;border-radius:50px;font-size:11px;font-weight:bold}
+        .badge-ok{background:rgba(141,198,63,0.15);color:var(--accent)}
+        .badge-warn{background:rgba(245,158,11,0.15);color:#d97706}
+        .badge-danger{background:rgba(239,68,68,0.15);color:#dc2626}
+        .badge-info{background:rgba(59,130,246,0.15);color:var(--info)}
+
+        /* Actions */
+        .actions{display:flex;gap:5px}
+        .actions button{width:34px;height:34px;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.2s}
+        .wa{background:#25D366}.edit{background:#eee}.del{background:rgba(239,68,68,0.1);color:#ef4444}
+        .actions button:hover{transform:translateY(-2px)}
     </style>
 </head>
 <body>
 
-<script>
-    // ✅ الرابط تم دمجه بنجاح
-    const API_URL = "https://script.google.com/macros/s/AKfycbykcl1v2TEURnPasMiMbJFCmnC6MgGfhHCAGmwOM6vu_sxpt7CdFM6NcDCRDxrGPVlo/exec"; 
-</script>
+    <div class="toast-container" id="toastContainer"></div>
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" style="margin-top:10px;font-weight:bold;color:var(--primary)">جاري العمل...</div></div>
 
-<div id="loader"><div class="spinner"></div><p style="margin-top:10px;color:var(--primary)">Processing...</p></div>
-
-<div class="container">
-    <h1>Rass 1 Pharmacy 💊</h1>
-    
-    <div class="nav">
-        <button onclick="Show('list')" id="nav-list" class="active">📋 Patients</button>
-        <button onclick="Show('add')" id="nav-add">➕ Add New</button>
-    </div>
-
-    <div id="view-add" class="card hidden">
-        <h3 style="margin-top:0">➕ New Entry</h3>
-        <form onsubmit="Save(event)">
-            <input type="hidden" id="id">
-            <label style="font-size:12px;font-weight:bold">Type</label>
-            <select id="type" onchange="ToggleType()">
-                <option value="refill">Refill (Monthly Patient)</option>
-                <option value="order">Special Order</option>
-            </select>
-            
-            <label style="font-size:12px;font-weight:bold">Phone</label>
-            <input type="tel" id="phone" placeholder="05xxxxxxxx" required>
-            
-            <label style="font-size:12px;font-weight:bold">Details</label>
-            <input type="text" id="name" placeholder="Patient Name">
-            <input type="text" id="med" placeholder="Medication Name" required>
-            
-            <div id="refill-opts">
-                <label style="font-size:12px;font-weight:bold">Last Dispense Date</label>
-                <input type="date" id="date">
-            </div>
-            
-            <div id="order-opts" class="hidden">
-                <label style="font-size:12px;font-weight:bold">Source Branch</label>
-                <input type="text" id="branch" placeholder="e.g. Unizah 1">
-            </div>
-            
-            <input type="text" id="notes" placeholder="Notes (Optional)">
-            <button type="submit" style="margin-top:10px">💾 Save Record</button>
-        </form>
-    </div>
-
-    <div id="view-list" class="card">
-        <input type="text" id="search" placeholder="🔍 Search name, phone or med..." onkeyup="Render()">
-        <div class="table-wrap">
-            <table id="table">
-                <thead><tr><th>Patient</th><th>Medication</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody id="tbody"></tbody>
-            </table>
+    <div class="container">
+        <div class="header-container">
+            <h1>Rass 1 Pharmacy System</h1>
+            <p style="color:#666">نظام متابعة المرضى - صيدلية الرازي</p>
         </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showPage('patients')">📋 المرضى (Patients)</button>
+            <button class="tab" onclick="showPage('reports')">📊 التقارير (Reports)</button>
+        </div>
+
+        <div id="patientsPage" class="page active">
+            <div class="stats">
+                <div class="stat total"><div class="stat-num" id="statTotal">0</div><div class="stat-label">الكل (Total)</div></div>
+                <div class="stat w"><div class="stat-num" id="statWarn">0</div><div class="stat-label">قريب (Soon)</div></div>
+                <div class="stat d"><div class="stat-num" id="statOver">0</div><div class="stat-label">متأخر (Overdue)</div></div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3 class="card-title" id="formTitle">➕ إضافة جديد</h3>
+                    <div class="type-selector">
+                        <button type="button" class="type-btn active" id="btnRefill" onclick="setType('refill')">💊 Refill</button>
+                        <button type="button" class="type-btn" id="btnOrder" onclick="setType('order')">📦 Order</button>
+                    </div>
+                    <form id="patientForm" onsubmit="savePatient(event)">
+                        <input type="hidden" id="editId">
+                        <input type="hidden" id="entryType" value="refill">
+                        
+                        <div class="form-group"><label>رقم الجوال *</label><input type="tel" id="phone" placeholder="05xxxxxxxx" required></div>
+                        <div class="form-group"><label>اسم المريض</label><input type="text" id="name" placeholder="اختياري"></div>
+                        <div class="form-group"><label>الدواء *</label><input type="text" id="med" required></div>
+                        
+                        <div id="refillFields">
+                            <div class="form-group"><label>تاريخ الصرف</label><input type="date" id="date"></div>
+                            <div class="form-group"><label>مدة الكفاية (أيام)</label><input type="number" id="days" value="30"></div>
+                        </div>
+
+                        <div id="orderFields" style="display:none">
+                            <div class="form-group"><label>الفرع المصدر</label>
+                                <input type="text" id="branch" placeholder="مثال: عنيزة 1">
+                            </div>
+                        </div>
+
+                        <div class="form-group"><label>ملاحظات</label><input type="text" id="notes"></div>
+                        
+                        <button type="submit" class="btn">حفظ (Save)</button>
+                        <button type="button" class="btn" style="background:#eee;color:#333;margin-top:10px" onclick="resetForm()">إلغاء</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">📋 السجلات</h3>
+                    <input type="text" id="search" placeholder="🔍 بحث بالاسم، الرقم، أو الدواء..." onkeyup="renderPatients()" style="margin-bottom:15px">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>المريض</th><th>الدواء</th><th>الحالة / الموعد</th><th>إجراءات</th></tr></thead>
+                            <tbody id="patientsTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportsPage" class="page">
+            <div class="card" style="text-align:center;padding:50px">
+                <h2>📈 لوحة المعلومات</h2>
+                <div style="display:flex;justify-content:center;gap:30px;margin-top:30px">
+                    <div>
+                        <div style="font-size:40px;font-weight:bold;color:var(--primary)" id="repTotal">0</div>
+                        <div>إجمالي المرضى</div>
+                    </div>
+                    <div>
+                        <div style="font-size:40px;font-weight:bold;color:var(--success)" id="repRefill">0</div>
+                        <div>متابعة شهرية</div>
+                    </div>
+                    <div>
+                        <div style="font-size:40px;font-weight:bold;color:var(--info)" id="repOrder">0</div>
+                        <div>طلبيات خاصة</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
-</div>
 
 <script>
-let data = [];
-const today = new Date();
+// ==========================================
+// ⚙️ إعدادات النظام
+// ==========================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbykcl1v2TEURnPasMiMbJFCmnC6MgGfhHCAGmwOM6vu_sxpt7CdFM6NcDCRDxrGPVlo/exec';
+// ==========================================
+
+let patients = [];
 const WA_ICON = `<svg viewBox="0 0 32 32" width="18" height="18" fill="white"><path d="M16,2A13,13,0,0,0,4.9,22.2L2,30l7.8-2.9A13,13,0,1,0,16,2z M22.7,21.7c-0.3,0.8-1.5,1.5-2.1,1.5c-0.6,0-2.3-0.7-5.4-3.6c-2.4-2.3-3.8-4.5-4.1-5.1s0-1,0.6-1.6c0.3-0.3,0.5-0.5,0.7-0.8c0.2-0.2,0.1-0.5,0-0.7s-1.2-3-1.6-4.1c-0.4-1.1-0.9-0.9-1.2-0.9H9.1c-0.4,0-1,0.2-1.6,0.8c-0.6,0.6-2.2,2.2-2.2,5.3s2.3,6.1,2.6,6.5c0.3,0.4,4.4,6.7,10.7,9.4c3.7,1.6,5.2,1.6,6.1,1.5c1-0.1,2.7-1.1,3.1-2.2C28.1,22.9,28.1,22.1,27.8,22C27.5,21.9,26,21.1,25.4,20.8C24.8,20.5,24.4,20.3,24.2,20.6C24,21,23.3,21.9,22.7,21.7z"/></svg>`;
 
+// تشغيل عند البدء
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('date').valueAsDate = new Date();
-    LoadData();
+    loadPatients();
 });
 
-async function LoadData() {
-    document.getElementById('loader').style.display = 'flex';
+// تحميل البيانات
+async function loadPatients() {
+    setLoading(true);
     try {
+        // محاولة التحميل من الذاكرة المحلية أولاً للسرعة
         const local = localStorage.getItem('rass_data');
-        if(local) { data = JSON.parse(local); Render(); }
-        
-        if(API_URL.includes("http")) {
-            const res = await fetch(API_URL, {method:'POST', body:JSON.stringify({action:'get'})});
-            data = await res.json();
-            localStorage.setItem('rass_data', JSON.stringify(data));
-            Render();
+        if(local) { patients = JSON.parse(local); renderPatients(); }
+
+        // التحميل من السيرفر
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'get' })
+        });
+        const data = await response.json();
+        if(Array.isArray(data)) {
+            patients = data;
+            localStorage.setItem('rass_data', JSON.stringify(patients));
+            renderPatients();
         }
-    } catch(e) { console.error(e); }
-    document.getElementById('loader').style.display = 'none';
+    } catch (e) {
+        console.error(e);
+        showToast('خطأ في الاتصال بالإنترنت', 'error');
+    } finally {
+        setLoading(false);
+    }
 }
 
-async function Save(e) {
+// حفظ البيانات
+async function savePatient(e) {
     e.preventDefault();
-    document.getElementById('loader').style.display = 'flex';
     
-    const item = {
-        id: document.getElementById('id').value || Date.now().toString(),
-        type: document.getElementById('type').value,
+    const id = document.getElementById('editId').value;
+    const type = document.getElementById('entryType').value;
+    
+    const p = {
+        id: id || Date.now().toString(),
+        type: type,
         phone: document.getElementById('phone').value,
         name: document.getElementById('name').value,
         med: document.getElementById('med').value,
         date: document.getElementById('date').value,
+        days: document.getElementById('days').value,
         branch: document.getElementById('branch').value,
         notes: document.getElementById('notes').value
     };
 
-    const idx = data.findIndex(x => x.id == item.id);
-    if(idx > -1) data[idx] = item; else data.push(item);
+    setLoading(true);
     
-    Render();
-    Show('list');
-    document.getElementById('id').value = '';
-    document.forms[0].reset();
-    document.getElementById('date').valueAsDate = new Date();
-
-    if(API_URL.includes("http")) {
-        await fetch(API_URL, {method:'POST', body:JSON.stringify({action: idx>-1?'update':'add', data:item})});
+    // تحديث فوري للواجهة (Optimistic UI)
+    if(id) {
+        const index = patients.findIndex(x => x.id == id);
+        if(index > -1) patients[index] = p;
+    } else {
+        patients.push(p);
     }
-    document.getElementById('loader').style.display = 'none';
+    renderPatients();
+    resetForm();
+    showToast('تم الحفظ بنجاح');
+
+    // الإرسال للسيرفر
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: id ? 'update' : 'add', data: p })
+        });
+    } catch(e) {
+        showToast('لم يتم الحفظ في السيرفر', 'error');
+    }
+    setLoading(false);
 }
 
-async function Del(id) {
-    if(!confirm('Delete this record?')) return;
-    data = data.filter(x => x.id != id);
-    Render();
-    localStorage.setItem('rass_data', JSON.stringify(data));
-    if(API_URL.includes("http")) {
-        await fetch(API_URL, {method:'POST', body:JSON.stringify({action:'delete', data:{id}})});
-    }
+// حذف
+async function deletePatient(id) {
+    if(!confirm('هل أنت متأكد من الحذف؟')) return;
+    patients = patients.filter(p => p.id != id);
+    renderPatients();
+    localStorage.setItem('rass_data', JSON.stringify(patients));
+    
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'delete', data: {id} })
+        });
+        showToast('تم الحذف');
+    } catch(e) { console.error(e); }
 }
 
-function Render() {
+// عرض الجدول
+function renderPatients() {
     const q = document.getElementById('search').value.toLowerCase();
-    const tbody = document.getElementById('tbody');
-    tbody.innerHTML = '';
+    const tbody = document.getElementById('patientsTbody');
+    const today = new Date();
     
-    data.filter(x => (x.name+x.phone+x.med).toLowerCase().includes(q))
-    .sort((a,b) => new Date(a.date||'2099') - new Date(b.date||'2099'))
-    .forEach(x => {
-        let status = '', dueStr = '';
-        if(x.type === 'refill') {
-            const next = new Date(new Date(x.date).getTime() + 30*86400000);
-            const diff = Math.ceil((next - today)/(86400000));
-            dueStr = next.toLocaleDateString('en-US', {month:'short', day:'numeric'});
-            status = diff < 0 ? `<span class="badge b-bad">${Math.abs(diff)}d Over</span>` : `<span class="badge b-ok">${diff}d Left</span>`;
+    let stats = { total: 0, warn: 0, over: 0, refill: 0, order: 0 };
+    
+    const filtered = patients.filter(p => 
+        (p.name||'').toLowerCase().includes(q) || 
+        (p.phone||'').includes(q) || 
+        (p.med||'').toLowerCase().includes(q)
+    ).sort((a,b) => new Date(a.date||'2099') - new Date(b.date||'2099'));
+
+    tbody.innerHTML = filtered.map(p => {
+        stats.total++;
+        if(p.type === 'refill') stats.refill++; else stats.order++;
+
+        let statusHtml = '';
+        let dateStr = '';
+
+        if(p.type === 'refill') {
+            const lastDate = new Date(p.date);
+            const days = parseInt(p.days || 30);
+            const nextDate = new Date(lastDate);
+            nextDate.setDate(lastDate.getDate() + days);
+            
+            const diffTime = nextDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            dateStr = nextDate.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+
+            if(diffDays < 0) {
+                statusHtml = `<span class="badge badge-danger">متأخر ${Math.abs(diffDays)} يوم</span>`;
+                stats.over++;
+            } else if(diffDays <= 3) {
+                statusHtml = `<span class="badge badge-warn">باقي ${diffDays} يوم</span>`;
+                stats.warn++;
+            } else {
+                statusHtml = `<span class="badge badge-ok">باقي ${diffDays} يوم</span>`;
+            }
         } else {
-            status = `<span class="badge b-ord">Order</span>`;
-            dueStr = x.branch || 'Pending';
+            statusHtml = `<span class="badge badge-info">طلب خاص</span>`;
+            dateStr = p.branch || '-';
         }
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+        return `
+        <tr>
             <td>
-                <div style="font-weight:bold">${x.name || 'Unknown'}</div>
-                <div style="font-size:12px;color:#888">${x.phone}</div>
+                <div class="name">${p.name || 'غير مسجل'}</div>
+                <div class="phone">${p.phone}</div>
             </td>
             <td>
-                <div style="font-weight:500;color:var(--primary)">${x.med}</div>
-                <div style="font-size:11px;color:#666">${x.notes||''}</div>
+                <div style="font-weight:500">${p.med}</div>
+                <div style="font-size:11px;color:#888">${p.notes || ''}</div>
             </td>
             <td>
-                <div style="font-size:12px;margin-bottom:2px">${dueStr}</div>
-                ${status}
+                <div style="font-size:12px;color:#666">${dateStr}</div>
+                ${statusHtml}
             </td>
             <td>
                 <div class="actions">
-                    <button class="btn-wa" onclick="WA('${x.phone}', '${x.med}')" title="WhatsApp">${WA_ICON}</button>
-                    <button class="btn-edit" onclick="Edit('${x.id}')" title="Edit">✏️</button>
-                    <button class="btn-del" onclick="Del('${x.id}')" title="Delete">🗑️</button>
+                    <button class="wa" onclick="openWa('${p.phone}', '${p.med}')" title="واتساب">${WA_ICON}</button>
+                    <button class="edit" onclick="editPatient('${p.id}')" title="تعديل">✏️</button>
+                    <button class="del" onclick="deletePatient('${p.id}')" title="حذف">🗑️</button>
                 </div>
             </td>
-        `;
-        tbody.appendChild(tr);
-    });
+        </tr>`;
+    }).join('') || '<tr><td colspan="4" style="text-align:center;padding:20px;color:#999">لا توجد بيانات</td></tr>';
+
+    // تحديث الإحصائيات
+    document.getElementById('statTotal').innerText = stats.total;
+    document.getElementById('statWarn').innerText = stats.warn;
+    document.getElementById('statOver').innerText = stats.over;
+    
+    document.getElementById('repTotal').innerText = stats.total;
+    document.getElementById('repRefill').innerText = stats.refill;
+    document.getElementById('repOrder').innerText = stats.order;
 }
 
-function WA(phone, med) {
+// أدوات مساعدة
+function openWa(phone, med) {
     let p = phone.replace(/\D/g,'');
     if(!p.startsWith('966')) p = '966' + p.replace(/^0/,'');
     const msg = `مرحباً، صيدلية الرازي تذكركم بموعد صرف العلاج: ${med}`;
     window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`);
 }
 
-function Edit(id) {
-    const x = data.find(i => i.id == id);
-    for(let k in x) if(document.getElementById(k)) document.getElementById(k).value = x[k];
-    Show('add');
+function editPatient(id) {
+    const p = patients.find(x => x.id == id);
+    document.getElementById('editId').value = p.id;
+    document.getElementById('phone').value = p.phone;
+    document.getElementById('name').value = p.name;
+    document.getElementById('med').value = p.med;
+    document.getElementById('notes').value = p.notes;
+    document.getElementById('date').value = p.date;
+    document.getElementById('days').value = p.days;
+    document.getElementById('branch').value = p.branch;
+    
+    setType(p.type);
+    document.getElementById('formTitle').innerText = '✏️ تعديل بيانات';
+    window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function Show(v) {
-    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('view-'+v).classList.remove('hidden');
-    document.getElementById('nav-'+v).classList.add('active');
+function setType(t) {
+    document.getElementById('entryType').value = t;
+    document.getElementById('refillFields').style.display = t === 'refill' ? 'block' : 'none';
+    document.getElementById('orderFields').style.display = t === 'order' ? 'block' : 'none';
+    
+    document.getElementById('btnRefill').className = t === 'refill' ? 'type-btn active' : 'type-btn';
+    document.getElementById('btnOrder').className = t === 'order' ? 'type-btn active' : 'type-btn';
 }
 
-function ToggleType() {
-    const t = document.getElementById('type').value;
-    document.getElementById('refill-opts').classList.toggle('hidden', t !== 'refill');
-    document.getElementById('order-opts').classList.toggle('hidden', t !== 'order');
+function resetForm() {
+    document.getElementById('patientForm').reset();
+    document.getElementById('editId').value = '';
+    document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('formTitle').innerText = '➕ إضافة جديد';
+    setType('refill');
+}
+
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId + 'Page').classList.add('active');
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+function setLoading(active) {
+    document.getElementById('loadingOverlay').classList.toggle('active', active);
+}
+
+function showToast(msg, type='success') {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.background = type === 'error' ? '#ef4444' : '#333';
+    toast.innerText = msg;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 </script>
 </body>
