@@ -22,7 +22,7 @@
         @keyframes spin{to{transform:rotate(360deg)}}
         .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9998;opacity:0;visibility:hidden;transition:var(--transition)}
         .modal-overlay.active{opacity:1;visibility:visible}
-        .modal{background:white;border-radius:var(--radius-lg);padding:25px;max-width:400px;width:90%;text-align:center;transform:scale(0.9);transition:var(--transition)}
+        .modal{background:white;border-radius:var(--radius-lg);padding:25px;max-width:400px;width:90%;text-align:center;transform:scale(0.9);transition:var(--transition);max-height:80vh;overflow-y:auto}
         .modal-overlay.active .modal{transform:scale(1)}
         .modal-icon{font-size:48px;margin-bottom:15px}.modal-title{font-size:18px;font-weight:bold;color:var(--text-dark);margin-bottom:10px}.modal-message{color:var(--gray);margin-bottom:20px;line-height:1.6}
         .modal-actions{display:flex;gap:10px;justify-content:center}
@@ -31,6 +31,11 @@
         .modal-confirm{background:var(--primary);color:white}.modal-confirm:hover{background:var(--primary-light)}
         .modal-confirm.danger{background:var(--danger)}.modal-confirm.danger:hover{background:#dc2626}
         .modal-confirm.success{background:var(--success)}.modal-confirm.success:hover{background:#059669}
+        .history-list{text-align:left;margin-top:15px;border-top:1px solid #eee;padding-top:15px}
+        .history-item{padding:10px;border-bottom:1px solid #f5f5f5;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+        .history-item:last-child{border-bottom:none}
+        .history-date{font-weight:600;color:var(--text-dark)}
+        .history-status{font-size:11px;padding:2px 8px;border-radius:10px}
         .container{max-width:1200px;margin:0 auto}
         .header-container{text-align:center;margin-bottom:20px}
         .logo-img{height:80px;margin-bottom:10px;filter:drop-shadow(0 2px 4px rgba(86,28,44,0.2))}
@@ -88,7 +93,8 @@
         th{text-align:left;padding:12px 10px;background:#f9f9f9;color:var(--gray);font-size:11px;text-transform:uppercase;border-bottom:2px solid #eee;white-space:nowrap}
         td{padding:12px 10px;border-bottom:1px solid #eee;vertical-align:middle}
         tr:hover{background:#fcfcfc}
-        .name{font-weight:bold;color:var(--primary)}
+        .name{font-weight:bold;color:var(--primary);cursor:pointer;transition:var(--transition)}
+        .name:hover{text-decoration:underline;color:var(--primary-light)}
         .phone{color:#888;font-size:12px;margin-top:2px;display:flex;align-items:center;gap:5px}
         .phone-copy{cursor:pointer;padding:2px 5px;border-radius:4px;transition:var(--transition)}.phone-copy:hover{background:#e5e5e5}
         .med{color:var(--primary);font-weight:500}
@@ -192,7 +198,19 @@
 <body>
     <div class="toast-container" id="toastContainer"></div>
     <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+    
     <div class="modal-overlay" id="confirmModal"><div class="modal"><div class="modal-icon" id="modalIcon">⚠️</div><div class="modal-title" id="modalTitle">Confirm</div><div class="modal-message" id="modalMessage">Are you sure?</div><div class="modal-actions"><button class="modal-cancel" onclick="UI.closeModal()">Cancel</button><button class="modal-confirm" id="modalConfirm">Confirm</button></div></div></div>
+    
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <div class="modal-icon">📜</div>
+            <div class="modal-title" id="historyTitle">Patient History</div>
+            <div class="history-list" id="historyList"></div>
+            <div class="modal-actions" style="margin-top:20px">
+                <button class="modal-cancel" onclick="document.getElementById('historyModal').classList.remove('active')">Close</button>
+            </div>
+        </div>
+    </div>
 
 <div class="container">
     <div class="header-container">
@@ -757,7 +775,7 @@ const PatientActions = {
         UI.showModal({
             icon:'🗑️',
             title:'Delete',
-            message:'Delete "'+(p.name||'Unnamed')+'"?',
+            message:'Delete "'+(p.name || p.phone)+'"?',
             confirmText:'Delete',
             confirmClass:'danger',
             onConfirm:async()=>{
@@ -775,7 +793,7 @@ const PatientActions = {
         UI.showModal({
             icon:'📱',
             title:'Send WhatsApp',
-            message:'Send reminder to "'+(p.name||'Unnamed')+'"?',
+            message:'Send reminder to "'+(p.name || p.phone)+'"?',
             confirmText:'Send',
             confirmClass:'success',
             onConfirm:()=>this.sendRefillWhatsApp(id)
@@ -800,7 +818,7 @@ const PatientActions = {
         UI.showModal({
             icon:'📥',
             title:'Order Arrived',
-            message:'Send WhatsApp to "'+(p.name||'Unnamed')+'"?',
+            message:'Send WhatsApp to "'+(p.name || p.phone)+'"?',
             confirmText:'Yes, Send',
             confirmClass:'success',
             onConfirm:()=>this.markArrived(id)
@@ -861,6 +879,32 @@ const PatientActions = {
         UI.showToast('Renewed!','success');
         renderPatients();
         renderTracking();
+    },
+
+    showHistory(id){
+        const p=State.patients.find(x=>x.id===id);
+        if(!p)return;
+        document.getElementById('historyTitle').textContent = (p.name || p.phone) + " History";
+        const hl = document.getElementById('historyList');
+        
+        let h = `<div class="history-item"><div class="history-date">📅 Added</div><div class="history-status">${p.addedDate || '-'}</div></div>`;
+        h += `<div class="history-item"><div class="history-date">💊 Last Dispense</div><div class="history-status">${p.date}</div></div>`;
+        
+        if(p.history && p.history.length > 0){
+            h += `<div style="margin:15px 0 5px 0;font-weight:bold;font-size:12px;color:#888;text-transform:uppercase">Previous Cycles</div>`;
+            h += p.history.map(x => {
+                let s = 'Waiting';
+                let c = '#888';
+                if(x.convertedDate){s='✅ Bought';c='green'}
+                else if(x.reminderDate){s='📤 Sent';c='orange'}
+                return `<div class="history-item"><div class="history-date">${x.date}</div><div class="history-status" style="color:${c};border:1px solid ${c}">${s}</div></div>`;
+            }).join('');
+        } else {
+             h += `<div style="margin-top:15px;text-align:center;color:#999;font-size:12px;font-style:italic">No previous renewal history</div>`;
+        }
+        
+        hl.innerHTML = h;
+        document.getElementById('historyModal').classList.add('active');
     }
 };
 
@@ -1007,7 +1051,7 @@ function renderPatients(){
         
         return `<tr class="${io?'order-row':''}">
             <td><span class="type-badge">${io?'📦':'💊'}</span></td>
-            <td><div class="name">${Utils.sanitize(p.name)||'Unnamed'}${hb}</div><div class="phone"><span class="phone-copy" onclick="Utils.copyToClipboard('${p.phone}')" title="Copy">📋</span>${Utils.sanitize(p.phone)}</div>${io&&p.branch?'<div class="branch-info">From: '+p.branch+'</div>':''}</td>
+            <td><div class="name" onclick="PatientActions.showHistory('${p.id}')">${Utils.sanitize(p.name)}${hb}</div><div class="phone"><span class="phone-copy" onclick="Utils.copyToClipboard('${p.phone}')" title="Copy">📋</span>${Utils.sanitize(p.phone)}</div>${io&&p.branch?'<div class="branch-info">From: '+p.branch+'</div>':''}</td>
             <td><div class="med">${Utils.sanitize(p.med)}</div>${p.notes?'<div class="phone">'+Utils.sanitize(p.notes)+'</div>':''}</td>
             <td><span class="date-added">${ad}</span></td>
             <td>${dd}</td>
@@ -1058,9 +1102,9 @@ function renderTracking(){
         const hc=(p.history||[]).length;
         const hb=hc>0?'<div class="history-badge">🔄 '+hc+'</div>':'';
         if(p.converted==='yes'){
-            return `<div class="track-card converted">${hb}<div class="name">${Utils.sanitize(p.name)||'Unnamed'}</div><div class="phone">${Utils.sanitize(p.phone)}</div><div class="med">${Utils.sanitize(p.med)}</div><div class="info">📤 ${p.reminderDate}<br>✅ ${p.convertedDate}</div><button class="track-btn done" onclick="PatientActions.undoConverted('${p.id}')">✅ Converted (Undo)</button><button class="track-btn renew" onclick="PatientActions.renewPatient('${p.id}')">🔄 Renew</button></div>`;
+            return `<div class="track-card converted">${hb}<div class="name">${Utils.sanitize(p.name)}</div><div class="phone">${Utils.sanitize(p.phone)}</div><div class="med">${Utils.sanitize(p.med)}</div><div class="info">📤 ${p.reminderDate}<br>✅ ${p.convertedDate}</div><button class="track-btn done" onclick="PatientActions.undoConverted('${p.id}')">✅ Converted (Undo)</button><button class="track-btn renew" onclick="PatientActions.renewPatient('${p.id}')">🔄 Renew</button></div>`;
         }else{
-            return `<div class="track-card">${hb}<div class="name">${Utils.sanitize(p.name)||'Unnamed'}</div><div class="phone">${Utils.sanitize(p.phone)}</div><div class="med">${Utils.sanitize(p.med)}</div><div class="info">📤 ${p.reminderDate}</div><button class="track-btn" onclick="PatientActions.markConverted('${p.id}')">✅ Mark Converted</button></div>`;
+            return `<div class="track-card">${hb}<div class="name">${Utils.sanitize(p.name)}</div><div class="phone">${Utils.sanitize(p.phone)}</div><div class="med">${Utils.sanitize(p.med)}</div><div class="info">📤 ${p.reminderDate}</div><button class="track-btn" onclick="PatientActions.markConverted('${p.id}')">✅ Mark Converted</button></div>`;
         }
     }).join('');
 }
@@ -1101,7 +1145,7 @@ function generateRefillReport(m,y){
     document.getElementById('rRate').textContent=r+'%';
     document.getElementById('rBar').style.width=r+'%';
     document.getElementById('summaryTb').innerHTML=`<tr><td>📤 Sent</td><td>${s}</td><td>100%</td></tr><tr><td>✅ Converted</td><td>${c}</td><td>${r}%</td></tr><tr><td>⏳ Waiting</td><td>${w}</td><td>${wr}%</td></tr>`;
-    document.getElementById('convList').innerHTML=cp.length>0?cp.map(p=>`<tr><td class="name">${Utils.sanitize(p.name)||'Unnamed'}</td><td class="phone">${Utils.sanitize(p.phone)}</td><td class="med">${Utils.sanitize(p.med)}</td><td>${p.reminderDate}</td><td>${p.convertedDate}</td></tr>`).join(''):'<tr><td colspan="5"><div class="empty">No conversions</div></td></tr>';
+    document.getElementById('convList').innerHTML=cp.length>0?cp.map(p=>`<tr><td class="name">${Utils.sanitize(p.name)}</td><td class="phone">${Utils.sanitize(p.phone)}</td><td class="med">${Utils.sanitize(p.med)}</td><td>${p.reminderDate}</td><td>${p.convertedDate}</td></tr>`).join(''):'<tr><td colspan="5"><div class="empty">No conversions</div></td></tr>';
 }
 
 function generateOrdersReport(m,y){
